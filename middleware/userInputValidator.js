@@ -1,0 +1,29 @@
+import Joi from 'joi'
+import { standardResponse } from '../utils/utils.js'
+
+export const userSchema = Joi.object({
+    email: Joi.string().email().required(),
+    password: Joi.string().min(6).required(),
+    firstName: Joi.string().required(),
+    lastName: Joi.string().required(),
+    contact: Joi.string().required(),
+})
+
+export const generateRtokenSchema = Joi.object({
+    refreshToken: Joi.string().required()
+})
+
+
+export const loginSchema = Joi.object({
+    email: Joi.string().email().required(),
+    password: Joi.string().min(6).required(),
+})
+
+
+export const validateUserRequest = (req, res, next, validationObject) => {
+    const { error } = validationObject.validate(req.body)
+    if (error) {
+        return standardResponse(res, 400, undefined, error.details[0].message, error.details)
+    }
+    next()
+}
