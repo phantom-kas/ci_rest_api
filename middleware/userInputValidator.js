@@ -19,6 +19,13 @@ export const loginSchema = Joi.object({
     password: Joi.string().min(6).required(),
 })
 
+export const updateUserInfoSchema = Joi.object({
+    firstName: Joi.string().required(),
+    lastName: Joi.string().required(),
+    contact: Joi.string().required(),
+    description: Joi.string().required(),
+})
+
 
 export const validateUserRequest = (req, res, next, validationObject) => {
     const { error } = validationObject.validate(req.body)

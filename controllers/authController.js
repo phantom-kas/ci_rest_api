@@ -6,7 +6,7 @@ dotenv.config();
 import jwt from 'jsonwebtoken'
 
 export const createAccessToken = (user, rtkn) => {
-    return jwt.sign({ ...user, rtkn }, process.env.ATOKEN_SECRET, { expiresIn: '15s' })
+    return jwt.sign({ ...user, rtkn }, process.env.ATOKEN_SECRET, { expiresIn: 3*60*60 })
 }
 
 export const createRefereshToken = (userInfo) => {
