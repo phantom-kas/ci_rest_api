@@ -1,12 +1,14 @@
-import { deleteRefreshToken, storeRefereshTOken, getRtoken, getUserLoginDetails, getUserForToken } from "../models/authModel.js";
-import { standardResponse } from "../utils/utils.js"
+import { deleteRefreshToken, storeRefereshTOken, getRtoken, getUserLoginDetails, getUserForToken, storeVerificationCode } from "../models/authModel.js";
+import { generateCode, standardResponse } from "../utils/utils.js"
 import bcrypt from 'bcrypt'
 import dotenv from 'dotenv';
 dotenv.config();
 import jwt from 'jsonwebtoken'
+import { sendEmail } from "../services/emailService.js";
+import { verificationEmail } from "../emails/otp.js";
 
 export const createAccessToken = (user, rtkn) => {
-    return jwt.sign({ ...user, rtkn }, process.env.ATOKEN_SECRET, { expiresIn: 3*60*60 })
+    return jwt.sign({ ...user, rtkn }, process.env.ATOKEN_SECRET, { expiresIn: 3 * 60 * 60 })
 }
 
 export const createRefereshToken = (userInfo) => {
@@ -61,5 +63,27 @@ export const login = async (req, res, next) => {
 
 
 export const checkToken = async (req, res, next) => {
-    standardResponse(res,200,req.user)
+    standardResponse(res, 200, req.user)
+}
+
+export const verifyEmail = async (req, res, next) => {
+    const { email, id } = req.user
+    if (!email) {
+        standardResponse(res, 400, undefined, 'Email not provided');
+        return
+    }
+    const code = generateCode();
+    if (!await storeVerificationCode(id, code)) {
+        standardResponse(res, 500, undefined, 'Error');
+        return
+    }
+    try {
+         
+        await sendEmail(req.user.email, verificationEmail(code));
+        // res.json({ message: 'Verification code sent' });
+        standardResponse(res, 200, undefined, 'Verification code sent');
+    } catch (err) {
+        next(err)
+    }
+
 }

@@ -18,9 +18,13 @@ export const checkUserExists = async (object) => {
 export const increaseLearners = async (num = 1) => {
     await db.query("UPDATE app_state set learners_count = learners_count + ?", [num],)
 }
+
+
 export const increaseAdmins = async (num = 1) => {
-    await db.query("UPDATE app_state set admin_count = learners_count + ?", [num],)
+    await db.query("UPDATE app_state set admin_count = admin_count + ?", [num],)
 }
+
+
 export const createUser = async (
     firstName, lastName, email,
     password,
@@ -48,9 +52,9 @@ export const login = async (email, password) => {
     const [rows] = await db.query("SELECT password,salt from users where email = ?", [email]);
 }
 
-export const updateUserInfo = async (firstName,lastName,contact,description,id) => {
+export const updateUserInfo = async (firstName, lastName, contact, description, id) => {
     const [result] = await db.query("UPDATE users set firstName = ? ,lastName = ?,contact=?,description=?  where id = ? limit 1", [
-        firstName, lastName, contact ,description , id])
+        firstName, lastName, contact, description, id])
     if (result.affectedRows > 0) {
         await db.query("UPDATE users set __v = __v + 1 where id = ? ", [id])
         return true

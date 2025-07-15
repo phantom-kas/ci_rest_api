@@ -25,7 +25,11 @@ export const updateUserInfoSchema = Joi.object({
     contact: Joi.string().required(),
     description: Joi.string().required(),
 })
-
+export const courseSchema = Joi.object({
+    title: Joi.string().required(),
+    description: Joi.string().required(),
+    track: Joi.string().required(),
+})
 
 export const validateUserRequest = (req, res, next, validationObject) => {
     const { error } = validationObject.validate(req.body)

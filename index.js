@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import { errorHander } from './middleware/errorHandeling.js';
 import userRouter from './routes/userRoutes.js'
 import authRouter from './routes/authRoutes.js'
+import courseRouter from './routes/courseRoutes.js'
 import db from './db.js';
 import { standardResponse } from './utils/utils.js';
 dotenv.config();
@@ -13,6 +14,7 @@ app.use(cors());
 app.use(express.json());
 app.use('/api', userRouter)
 app.use('/api', authRouter)
+app.use('/api', courseRouter)
 
 
 app.get('/test', async (req, res) => {
