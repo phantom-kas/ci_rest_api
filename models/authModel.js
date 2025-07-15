@@ -33,6 +33,26 @@ export const getUserForToken = async (user_id) => {
 }
 
 
+export const getUserToken = async (user_id) => {
+    const [rows] = await db.query("SELECT verificationToken FROM users WHERE id = ? && verificationTokenExpiresAt  > ? limit 1", [user_id,getDateTime()]);
+    console.log('------------------------ipipipipppppppppppppppppppp')
+    console.log("getUserToken", user_id, getDateTime(), rows)
+    if (rows.length < 1) { 
+        return false;
+    }
+    return rows[0]['verificationToken'];
+} 
+
+
+export const setUserToEmailVerified = async (user_id) => {
+    const [result] = await db.query("UPDATE users set isVerified = 1, verificationToken = null, verificationTokenExpiresAt = null where id = ? limit 1", [user_id])
+    if (result.affectedRow < 1) {
+        return falses
+    }
+    return true
+}
+
+
 
 export const getUserLoginDetails = async (email) => {
     const [rows] = await db.query("SELECT id, email, salt , password FROM users WHERE email = ? limit 1", [email]);
@@ -52,14 +72,11 @@ export const getUserSalt = async(id)=>{
 
 
 export const storeVerificationCode = async (user_id, code) => {
-    let salt = await getUserSalt(user_id);
-    if(!salt){
-        return false
-    }
-    let hashedCode = await bcrypt.hash(code+'', salt);
+    let hashedCode = await bcrypt.hash(code,10);
     const [result] = await db.query("UPDATE users set verificationToken = ? ,verificationTokenExpiresAt = ? where id = ? limit 1", [ hashedCode, getFutureTimeGMT(),user_id]);
       if (result.affectedRow < 1) {
         return false
     }
     return true
 }
+

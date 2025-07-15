@@ -1,4 +1,4 @@
-import { deleteRefreshToken, storeRefereshTOken, getRtoken, getUserLoginDetails, getUserForToken, storeVerificationCode } from "../models/authModel.js";
+import { deleteRefreshToken, storeRefereshTOken, getRtoken, getUserLoginDetails, getUserForToken, storeVerificationCode, getUserToken, setUserToEmailVerified } from "../models/authModel.js";
 import { generateCode, standardResponse } from "../utils/utils.js"
 import bcrypt from 'bcrypt'
 import dotenv from 'dotenv';
@@ -66,8 +66,19 @@ export const checkToken = async (req, res, next) => {
     standardResponse(res, 200, req.user)
 }
 
-export const verifyEmail = async (req, res, next) => {
-    const { email, id } = req.user
+export const verifyEmail = async (req, res, next, user = null) => {
+    let email, id;
+    if (user) {
+        email = user.email
+        id = user.id;
+        console.log('user1')
+
+        console.log(user)
+    } else {
+        email = req.user.email
+        id = req.user.id
+        console.log('user2')
+    }
     if (!email) {
         standardResponse(res, 400, undefined, 'Email not provided');
         return
@@ -78,12 +89,38 @@ export const verifyEmail = async (req, res, next) => {
         return
     }
     try {
-         
-        await sendEmail(req.user.email, verificationEmail(code));
+        await sendEmail(email, verificationEmail(code));
         // res.json({ message: 'Verification code sent' });
         standardResponse(res, 200, undefined, 'Verification code sent');
     } catch (err) {
         next(err)
     }
+}
 
+
+
+
+export const verifyEmailToken = async (req, res, next) => {
+    const { token } = req.body
+    if (!token) {
+        standardResponse(res, 400, undefined, 'Token not provided');
+        return
+    }
+    const storedtoken = await getUserToken(req.user.id)
+    if (!storedtoken) {
+        standardResponse(res, 401, undefined, 'Invalid Verification Token');
+        return
+    }
+
+    if (!await bcrypt.compare(token,storedtoken)) {
+        standardResponse(res, 400, undefined, 'Invalid Verification Token');
+        return
+    }
+
+    if (setUserToEmailVerified(req.user.id)) {
+        // Update user status to verified
+        standardResponse(res, 200, undefined, 'Email verified successfully');
+    } else {
+        standardResponse(res, 400, undefined, 'Invalid verification code');
+    }
 }
