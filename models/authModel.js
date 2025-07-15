@@ -80,3 +80,13 @@ export const storeVerificationCode = async (user_id, code) => {
     return true
 }
 
+
+export const updateUserPassword = async (user_id, password,salt) => {
+    const [result] = await db.query("UPDATE users set password = ? ,salt = ? where id = ? limit 1", [password, salt, user_id])
+    if (result.affectedRow < 1) {
+        return false
+    }
+    return true
+}
+
+

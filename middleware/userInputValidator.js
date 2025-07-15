@@ -15,9 +15,14 @@ export const generateRtokenSchema = Joi.object({
 
 
 export const verifyEmailSchema = Joi.object({
-        token: Joi.string().min(5).required()
+    token: Joi.string().min(5).required()
 })
 
+
+export const resetPasswordSchema = Joi.object({
+    token: Joi.string().required(),
+    newPassword: Joi.string().required()
+})
 
 export const loginSchema = Joi.object({
     email: Joi.string().email().required(),

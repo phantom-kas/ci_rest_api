@@ -30,6 +30,7 @@ export const createUser = async (
     password,
     contact, role, created_by = null) => {
     const sql = "INSERT INTO users (firstname,lastName,email,password,salt,contact,role,isVerified,createdAt,__v,created_by) VALUES (?,?,?,?,?,?,?,?,?,?,?)";
+    
     let salt = await bcrypt.genSalt(10);
     const pwd = await bcrypt.hash(password, salt);
 

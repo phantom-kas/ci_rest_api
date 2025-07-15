@@ -1,7 +1,7 @@
 
 import express from 'express';
-import { checkToken, generateAtoken, login, verifyEmail, verifyEmailToken } from '../controllers/authController.js';
-import { generateRtokenSchema, loginSchema, validateUserRequest, verifyEmailSchema } from '../middleware/userInputValidator.js';
+import { checkToken, generateAtoken, generateResetPasswordToken, login, validateAndResetPassword, verifyEmail, verifyEmailToken } from '../controllers/authController.js';
+import { generateRtokenSchema, loginSchema, resetPasswordSchema, validateUserRequest, verifyEmailSchema } from '../middleware/userInputValidator.js';
 import { authenticateAtoken } from '../middleware/auth.js';
 
 
@@ -12,5 +12,7 @@ router.post('/login', (req, res, next) => validateUserRequest(req, res, next, lo
 router.get('/check_token',authenticateAtoken, checkToken)
 router.post('/send_verify_email',authenticateAtoken, verifyEmail)
 router.post('/verify_email',authenticateAtoken,(req, res, next) => validateUserRequest(req, res, next, verifyEmailSchema), verifyEmailToken)
+router.get('/generate_reset_password_token',authenticateAtoken, generateResetPasswordToken)
+router.put('/reset_password',authenticateAtoken,(req, res, next) => validateUserRequest(req, res, next, resetPasswordSchema), validateAndResetPassword)
 
 export default router
