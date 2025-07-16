@@ -45,18 +45,18 @@ export const login = async (req, res, next) => {
     const { password, email } = req.body
     const user = await getUserLoginDetails(email)
     if (!user) {
-        standardResponse(res, 401, undefined, 'In valid credentials');
+        standardResponse(res, 401, undefined, 'Invalid credentials');
         return
     }
     if (! await bcrypt.compare(password, user.password)) {
-        return standardResponse(res, 401, undefined, 'In valid credentials');
+        return standardResponse(res, 401, undefined, 'Invalid credentials');
     }
     if (!await updateLastLogin(user.id)) {
         return standardResponse(res, 500, undefined, 'Something went wrong');
     }
     let userInfo = await getUserForToken(user.id)
     if (!userInfo) {
-        standardResponse(res, 401, undefined, 'In valid credentials');
+        standardResponse(res, 401, undefined, 'Invalid credentials');
         return
     }
     const { refreshtoken, tokenId } = createRefereshToken(userInfo)
