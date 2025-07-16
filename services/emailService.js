@@ -13,7 +13,7 @@ const transporter = nodemailer.createTransport({
 });
 
 
-export async function sendEmail(to,emailTemlate) {
+export async function sendEmail(to,emailTemlate,subject='Verify Your Email') {
   const html = emailTemlate;
 
   console.log(emailTemlate);
@@ -24,9 +24,9 @@ export async function sendEmail(to,emailTemlate) {
 
 
   await transporter.sendMail({
-    from: `"Your App" <${process.env.EMAIL_USER}>`,
+    from: `"CI Client" <${process.env.EMAIL_USER}>`,
     to,
-    subject: 'Verify Your Email',
+    subject,
     html,
   });
 }

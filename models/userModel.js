@@ -63,4 +63,10 @@ export const updateUserInfo = async (firstName, lastName, contact, description, 
     return false
 }
 
-
+export const getUserIDByEmail = async(email)=>{
+        const [rows] = await db.query(`SELECT id from users where email = ? limit 1`, [email]);
+    if (rows.length < 1) {
+        return false
+    }
+    return rows[0]['id'];
+}

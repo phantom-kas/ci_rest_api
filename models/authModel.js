@@ -25,29 +25,35 @@ export const storeRefereshTOken = async (rtoken, user_id) => {
 }
 
 export const getUserForToken = async (user_id) => {
-    const [rows] = await db.query("SELECT id, email, role ,firstName,lastName FROM users WHERE id = ?", [user_id]);
+    const [rows] = await db.query("SELECT id, email, role ,firstName,lastName,isVerified,lastLogin,__v FROM users WHERE id = ?", [user_id]);
     if (rows.length < 1) {
         return false;
     }
     return rows[0];
 }
 
-
+export const updateLastLogin = async (id) => {
+    const [result] = await db.query("UPDATE users set lastLogin=? where id = ? limit 1", [getDateTime(),id])
+    if (result.affectedRow < 1) {
+        return false
+    }
+    return true
+}
 export const getUserToken = async (user_id) => {
-    const [rows] = await db.query("SELECT verificationToken FROM users WHERE id = ? && verificationTokenExpiresAt  > ? limit 1", [user_id,getDateTime()]);
+    const [rows] = await db.query("SELECT verificationToken FROM users WHERE id = ? && verificationTokenExpiresAt  > ? limit 1", [user_id, getDateTime()]);
     console.log('------------------------ipipipipppppppppppppppppppp')
     console.log("getUserToken", user_id, getDateTime(), rows)
-    if (rows.length < 1) { 
+    if (rows.length < 1) {
         return false;
     }
     return rows[0]['verificationToken'];
-} 
+}
 
 
 export const setUserToEmailVerified = async (user_id) => {
     const [result] = await db.query("UPDATE users set isVerified = 1, verificationToken = null, verificationTokenExpiresAt = null where id = ? limit 1", [user_id])
     if (result.affectedRow < 1) {
-        return falses
+        return false
     }
     return true
 }
@@ -62,8 +68,8 @@ export const getUserLoginDetails = async (email) => {
     return rows[0];
 }
 
-export const getUserSalt = async(id)=>{
-     const [rows] = await db.query("SELECT salt FROM users WHERE id = ? limit 1", [id]);
+export const getUserSalt = async (id) => {
+    const [rows] = await db.query("SELECT salt FROM users WHERE id = ? limit 1", [id]);
     if (rows.length < 1) {
         return false;
     }
@@ -72,16 +78,16 @@ export const getUserSalt = async(id)=>{
 
 
 export const storeVerificationCode = async (user_id, code) => {
-    let hashedCode = await bcrypt.hash(code,10);
-    const [result] = await db.query("UPDATE users set verificationToken = ? ,verificationTokenExpiresAt = ? where id = ? limit 1", [ hashedCode, getFutureTimeGMT(),user_id]);
-      if (result.affectedRow < 1) {
+    let hashedCode = await bcrypt.hash(code, 10);
+    const [result] = await db.query("UPDATE users set verificationToken = ? ,verificationTokenExpiresAt = ? where id = ? limit 1", [hashedCode, getFutureTimeGMT(), user_id]);
+    if (result.affectedRow < 1) {
         return false
     }
     return true
 }
 
 
-export const updateUserPassword = async (user_id, password,salt) => {
+export const updateUserPassword = async (user_id, password, salt) => {
     const [result] = await db.query("UPDATE users set password = ? ,salt = ? where id = ? limit 1", [password, salt, user_id])
     if (result.affectedRow < 1) {
         return false

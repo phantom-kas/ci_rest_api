@@ -1,4 +1,4 @@
-import { deleteRefreshToken, storeRefereshTOken, getRtoken, getUserLoginDetails, getUserForToken, storeVerificationCode, getUserToken, setUserToEmailVerified, updateUserPassword } from "../models/authModel.js";
+import { deleteRefreshToken, storeRefereshTOken, getRtoken, getUserLoginDetails, getUserForToken, storeVerificationCode, getUserToken, setUserToEmailVerified, updateUserPassword, updateLastLogin } from "../models/authModel.js";
 import { generateCode, standardResponse } from "../utils/utils.js"
 import bcrypt from 'bcrypt'
 import dotenv from 'dotenv';
@@ -6,6 +6,7 @@ dotenv.config();
 import jwt from 'jsonwebtoken'
 import { sendEmail } from "../services/emailService.js";
 import { resetPasswordEmailHTML, verificationEmail } from "../emails/otp.js";
+import { getUserIDByEmail } from "../models/userModel.js";
 
 export const createAccessToken = (user, rtkn) => {
     return jwt.sign({ ...user, rtkn }, process.env.ATOKEN_SECRET, { expiresIn: 3 * 60 * 60 })
@@ -47,17 +48,24 @@ export const login = async (req, res, next) => {
         standardResponse(res, 401, undefined, 'In valid credentials');
         return
     }
-    if (await bcrypt.compare(password, user.password)) {
-        let userInfo = await getUserForToken(user.id)
-        if (!userInfo) {
-            standardResponse(res, 401, undefined, 'In valid credentials');
-        }
-        const { refreshtoken, tokenId } = createRefereshToken(userInfo)
-        const accessToken = createAccessToken(userInfo, tokenId)
-        standardResponse(res, 200, undefined, 'Login success', undefined, { refreshtoken, accessToken })
+    if (! await bcrypt.compare(password, user.password)) {
+        return standardResponse(res, 401, undefined, 'In valid credentials');
+    }
+    if (!await updateLastLogin(user.id)) {
+        return standardResponse(res, 500, undefined, 'Something went wrong');
+    }
+    let userInfo = await getUserForToken(user.id)
+    if (!userInfo) {
+        standardResponse(res, 401, undefined, 'In valid credentials');
         return
     }
-    standardResponse(res, 401, undefined, 'In valid credentials');
+    const { refreshtoken, tokenId } = createRefereshToken(userInfo)
+    const accessToken = createAccessToken(userInfo, tokenId)
+    userInfo.refreshToken = refreshtoken
+    userInfo.accessToken = accessToken
+    standardResponse(res, 200, userInfo, 'Login success')
+    return
+
 }
 
 
@@ -126,7 +134,11 @@ export const verifyEmailToken = async (req, res, next) => {
 }
 
 export const generateResetPasswordToken = async (req, res, next) => {
-    const { id } = req.user
+    const email = req.query.email
+    const id = await getUserIDByEmail(email);
+   
+    console.log(']]]]]]]]]]]]]]]]]]]]]]]]')
+    console.log(id)
     const code = generateCode();
     if (!await storeVerificationCode(id, code)) {
         standardResponse(res, 500, undefined, 'Error');
@@ -135,10 +147,10 @@ export const generateResetPasswordToken = async (req, res, next) => {
 
     const token = jwt.sign({ id, code }, process.env.ATOKEN_SECRET, { expiresIn: 60 * 60 })
     const encoded = Buffer.from(token).toString('base64');
-    let link = (req.body.link || process.env.FRONTEND_URL) + '/reset_password?token=' + encoded;
+    let link = (req.query.link || process.env.FRONTEND_URL) + '?token=' + encoded;
 
     try {
-        await sendEmail(req.user.email, resetPasswordEmailHTML(link));
+        await sendEmail(email, resetPasswordEmailHTML(link),'Password Reset');
         standardResponse(res, 200, undefined, 'Reset password link sent to your email');
     } catch (err) {
         next(err)
@@ -151,24 +163,23 @@ export const validateAndResetPassword = async (req, res, next) => {
     const decodedToken = Buffer.from(token, 'base64').toString('utf-8');
     const decoded = jwt.verify(decodedToken, process.env.ATOKEN_SECRET);
     let { id, code } = decoded;
-    if (id != req.user.id) {
-        standardResponse(res, 401, undefined, 'Access denied');
-        return
-    }
-    const storedtoken = await getUserToken(req.user.id)
+    console.log(']]]]]]]]]]]]]]]]]]]]]]]]')
+    console.log(decoded)
+    const storedtoken = await getUserToken(id)
     if (!storedtoken) {
         standardResponse(res, 401, undefined, 'Invalid Verification Token');
         return
     }
+
     if (!await bcrypt.compare(code, storedtoken)) {
-        standardResponse(res, 400, undefined, 'Invalid Verification Token');
+        standardResponse(res, 400, undefined, 'Invalid Verification Token.');
         return
     }
 
     let salt = await bcrypt.genSalt(10);
     const pwd = await bcrypt.hash(newPassword, salt);
 
-    if (await updateUserPassword(id, pwd,salt)) {
+    if (await updateUserPassword(id, pwd, salt)) {
         return standardResponse(res, 200, undefined, 'Password reset successfully');
     }
     standardResponse(res, 500, undefined, 'Error resetting password');
