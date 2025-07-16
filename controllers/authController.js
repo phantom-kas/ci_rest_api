@@ -43,7 +43,17 @@ export const generateAtoken = async (req, res, next) => {
 
 export const login = async (req, res, next) => {
     const { password, email } = req.body
+    console.log("--------------------------login----------------------",);
+
+    console.log("Connecting to DB:", {
+        host: process.env.DB_HOST,
+        port: process.env.DB_PORT,
+        ssl: true
+    });
+
+    console.log("--------------------------login----------------------",);
     const user = await getUserLoginDetails(email)
+
     if (!user) {
         standardResponse(res, 401, undefined, 'Invalid credentials');
         return
@@ -136,7 +146,7 @@ export const verifyEmailToken = async (req, res, next) => {
 export const generateResetPasswordToken = async (req, res, next) => {
     const email = req.query.email
     const id = await getUserIDByEmail(email);
-   
+
     console.log(']]]]]]]]]]]]]]]]]]]]]]]]')
     console.log(id)
     const code = generateCode();
@@ -150,7 +160,7 @@ export const generateResetPasswordToken = async (req, res, next) => {
     let link = (req.query.link || process.env.FRONTEND_URL) + '?token=' + encoded;
 
     try {
-        await sendEmail(email, resetPasswordEmailHTML(link),'Password Reset');
+        await sendEmail(email, resetPasswordEmailHTML(link), 'Password Reset');
         standardResponse(res, 200, undefined, 'Reset password link sent to your email');
     } catch (err) {
         next(err)
