@@ -15,11 +15,9 @@ app.use(express.json());
 app.use('/api', userRouter)
 app.use('/api', authRouter)
 app.use('/api', courseRouter)
-
-
 app.get('/test', async (req, res) => {
     const [rows] = await db.query("SELECT * from users");
     standardResponse(res, 200,rows,'success')
 });
 app.use(errorHander)
-app.listen(5000, () => console.log("Server running on port 5000"));
+app.listen( process.env.PORT || 4000, () => console.log("Server running on port "+(process.env.PORT||4000)));
