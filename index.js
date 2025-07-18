@@ -7,6 +7,8 @@ import authRouter from './routes/authRoutes.js'
 import courseRouter from './routes/courseRoutes.js'
 import db from './db.js';
 import { standardResponse } from './utils/utils.js';
+
+import trackRouter from './routes/trackRoute.js'
 dotenv.config();
 let users = [1]
 const app = express();
@@ -15,6 +17,7 @@ app.use(express.json());
 app.use('/api', userRouter)
 app.use('/api', authRouter)
 app.use('/api', courseRouter)
+app.use('/api', trackRouter)
 app.get('/test', async (req, res) => {
     const [rows] = await db.query("SELECT * from users");
     standardResponse(res, 200,rows,'success')

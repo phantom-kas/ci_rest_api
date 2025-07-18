@@ -24,6 +24,12 @@ export const getDateTime = () => {
 }
 
 
+export const getMonth = () => {
+    const now = new Date();
+    const pad = n => String(n).padStart(2, '0');
+    return `${now.getUTCFullYear()}-${pad(now.getUTCMonth() + 1)}`;
+}
+
 export function getFutureTimeGMT(diff = 3600000) {
     const now = new Date();
 

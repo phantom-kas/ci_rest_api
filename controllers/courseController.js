@@ -1,4 +1,5 @@
-import { checkTrackExists, createCourse, increaseCourseCount } from "../models/courseModel.js";
+import {  createCourse, increaseCourseCount } from "../models/courseModel.js";
+import { checkTrackExists } from "../models/trackModel.js";
 import { standardResponse } from "../utils/utils.js";
 
 
