@@ -10,9 +10,9 @@ try {
         password: process.env.DB_PASSWORD,
         database: process.env.DB_NAME,
         port: process.env.DB_PORT,
-        // ssl: {
-        //     rejectUnauthorized: true // Enforces SSL with cert validation
-        // }
+        ssl: {
+            rejectUnauthorized: true // Enforces SSL with cert validation
+        }
     });
 } catch (err) {
     console.log("MySQL connection fail:" + err.message);
