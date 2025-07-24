@@ -2,7 +2,7 @@
 import express from 'express';
 import { getAllUsers, createAdmin, createLearner, updateUser } from '../controllers/userController.js';
 import { validateUserRequest, userSchema, generateRtokenSchema, loginSchema, updateUserInfoSchema, } from '../middleware/userInputValidator.js';
-import { adminProjected, authenticateAtoken } from '../middleware/auth.js';
+import { adminProtected, authenticateAtoken } from '../middleware/auth.js';
 
 
 const router = express.Router()

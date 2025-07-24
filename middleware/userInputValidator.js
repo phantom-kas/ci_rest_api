@@ -45,10 +45,10 @@ export const courseSchema = Joi.object({
 export const trackSchema = Joi.object({
     title: Joi.string().required(),
     price: Joi.number().required(),
-    puration: Joi.string().required(),
+    duration: Joi.string().required(),
     instructor: Joi.string().required(),
     description: Joi.string().required(),
-    track: Joi.string().required(),
+    // track: Joi.string().required(),
 })
 
 export const validateUserRequest = (req, res, next, validationObject) => {

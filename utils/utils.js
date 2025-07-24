@@ -1,3 +1,7 @@
+import dotenv from 'dotenv';
+import cloudinary from '../config/cloudinary.js';
+import path from 'path';
+dotenv.config();
 export const standardResponse = (res, status, data = undefined, message = undefined, messages = undefined, obj = undefined) => {
     // const statusString = '';
     res.status(status).json({
@@ -52,3 +56,38 @@ export const generateCode = () => {
     const code = Math.floor(100000 + Math.random() * 900000);
     return code.toString();
 }
+
+
+
+
+export const handleUpload = async (req, options = {}) => {
+  const {
+    allowedMimeTypes = [],
+    uploadsDir = 'uploads',
+  } = options;
+
+  const file = req.file;
+  if (!file) throw new Error('No file uploaded');
+
+  if (!allowedMimeTypes.includes(file.mimetype)) {
+    throw new Error('Unsupported file type');
+  }
+
+  if (process.env.NODE_ENV === 'production') {
+    // Upload to Cloudinary using memory buffer
+    const base64 = file.buffer.toString('base64');
+    const fileStr = `data:${file.mimetype};base64,${base64}`;
+
+    const result = await cloudinary.uploader.upload(fileStr, {
+      folder: 'uploads',
+      resource_type: 'auto',
+    });
+
+    return result.secure_url;
+  } else {
+    // Dev: return local path
+    return `/${uploadsDir}/${file.filename}`;
+  }
+};
+
+

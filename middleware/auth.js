@@ -19,7 +19,7 @@ export const authenticateAtoken = async (req, res, next) => {
 }
 
 
-export const adminProjected = (req, res, next) => {
+export const adminProtected = (req, res, next) => {
     if (req.user.role != 'admin') {
         return standardResponse(res, 401, undefined, 'Access denied');
     }

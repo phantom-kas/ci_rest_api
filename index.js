@@ -7,13 +7,16 @@ import authRouter from './routes/authRoutes.js'
 import courseRouter from './routes/courseRoutes.js'
 import db from './db.js';
 import { standardResponse } from './utils/utils.js';
-
 import trackRouter from './routes/trackRoute.js'
+import path from 'path'
+import { fileURLToPath } from 'url';
 dotenv.config();
 let users = [1]
 const app = express();
 app.use(cors());
 app.use(express.json());
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+app.use('/uploads',express.static(path.join(__dirname,'uploads')))
 app.use('/api', userRouter)
 app.use('/api', authRouter)
 app.use('/api', courseRouter)
