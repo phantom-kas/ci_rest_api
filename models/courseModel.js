@@ -32,8 +32,8 @@ export const increaseMonthlyCoursesCount = async (num = 1) => {
 }
 
 
-export const getCoursesDb = async (cols = '*') => {
-    const [rows] = await db.query(`SELECT ${cols} from courses where 1`);
+export const getCoursesDb = async (cols = '*', where = '1', params = undefined) => {
+    const [rows] = await db.query(`SELECT ${cols} from courses where ${where}`, params);
     return rows;
 }
 
@@ -43,12 +43,12 @@ export const getCoursesDb2 = async (limit, lastId = null) => {
     let where = "";
     let lastSql = ''
     if (lastId) {
-        lastSql = ' && c.id < ? ' 
+        lastSql = ' && c.id < ? '
         queryParams.unshift(lastId)
 
         console.log(queryParams)
     }
-    const [rows] = await db.query(`SELECT c.id, c.image,c.title,c.track , t.name as trackName,c.created_at from courses as c inner join track as t on c.track = t.id where 1 ${lastSql} ORDER BY t.id DESC LIMIT ?`,queryParams);
+    const [rows] = await db.query(`SELECT c.id, c.image,c.title,c.track , t.name as trackName,c.created_at from courses as c inner join track as t on c.track = t.id where 1 ${lastSql} ORDER BY c.id DESC LIMIT ?`, queryParams);
     return rows;
 }
 
@@ -61,3 +61,51 @@ export const createCourse = async (req, title, description, track, fileUrl) => {
     return result.insertId
 }
 
+
+export const deleteCourseById = async (courseId) => {
+    const [result] = await db.query("DELETE FROM courses WHERE id = ?", [courseId]);
+    if (result.affectedRows < 1) {
+        return false
+    }
+    return true;
+}
+
+
+export const reduceTrackCourses = async (track) => {
+    const [result] = await db.query("UPDATE track set num_courses = num_courses - 1 where id = ? ", [track],)
+    if (result.affectedRows < 1) {
+        return false
+    }
+    return true;
+}
+
+export const reducMonthlyCoursesCount = async (num = 1) => {
+    const month = getMonth()
+    const [result] = await db.query("UPDATE monthly_state set courses_count = courses_count - ? where month = ?", [num, month],)
+    if (result.affectedRows < 1) {
+        return false
+    }
+    return true;
+}
+
+
+export const updateCourseDb = async (title, track, description, id) => {
+    const [result] = await db.query("UPDATE courses set title=? , track =? ,description = ? where id = ? limit 1", [title, track, description, id])
+    if (result.affectedRows < 1) {
+        return false
+    }
+    return true
+}
+
+export const updateV = async (id)=>{
+ await db.query("UPDATE courses set __v = __v + 1 where id = ?",[id])
+}
+
+
+export const editImageDb =async (filename,id)=>{
+     const [result] = await db.query("UPDATE courses set image = ? , __v = __v+1 where id = ? limit 1", [filename, id],)
+    if (result.affectedRows < 1) {
+      return false
+    }
+    return true
+}

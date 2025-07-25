@@ -3,7 +3,7 @@ import { getDateTime, getMonth } from "../utils/utils.js"
 
 export const increaseCourseTrack = async (num = 1) => {
     await db.query("UPDATE app_state set tracks_count = tracks_count + ?", [num],)
-    await increaseMonthlyTrackCount()
+    await increaseMonthlyTrackCount(num)
 }
 
 
@@ -38,7 +38,35 @@ export const checkTrackExists = async (object) => {
 }
 
 
-export const getTracksDb = async (cols = '*') => {
-    const [rows] = await db.query(`SELECT ${cols} from track where 1 order by id desc`);
+export const getTracksDb = async (cols = '*' , where = ' 1',queryParams=[]) => {
+    const [rows] = await db.query(`SELECT ${cols} from track where ${where} `,queryParams);
     return rows;
+}
+
+export const deleteTrackId = async (trackId) => {
+    const [result] = await db.query("DELETE FROM track WHERE id = ?", [trackId]);
+    if (result.affectedRows < 1) {
+        return false
+    }
+    return true;
+}
+
+export const editImageDb =async (filename,id)=>{
+     const [result] = await db.query("UPDATE track set image = ? , __v = __v+1 where id = ? limit 1", [filename, id],)
+    if (result.affectedRows < 1) {
+      return false
+    }
+    return true
+}
+export const updateTrackDb = async (description, price, duration, instructor, title,id)=>{
+    const [result] = await db.query("UPDATE track set price = ?,name = ?,duration = ?,description = ?,Instructor=? where id = ? limit 1", [price,title,duration,description,instructor, id],)
+    if (result.affectedRows < 1) {
+      return false
+    }
+    return true
+}
+
+
+export const updateV = async (id)=>{
+ await db.query("UPDATE track set __v = __v + 1 where id = ?",[id])
 }
