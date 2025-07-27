@@ -1,4 +1,4 @@
-import { checkTrackExists, createTrack, deleteTrackId, editImageDb, getTracksDb, increaseCourseTrack, updateTrackDb, updateV } from "../models/trackModel.js";
+import { checkTrackExists, createTrack, deleteTrackId, editImageDb, getTrackCourses, getTracksDb, increaseCourseTrack, updateTrackDb, updateV } from "../models/trackModel.js";
 import { deleteFile, getPaginationDb, handleUpload, standardResponse } from "../utils/utils.js";
 
 export const addTrack = async (req, res, next) => {
@@ -100,7 +100,7 @@ export const updateTrack = async (req, res, next) => {
         }
         await updateV(id)
 
-        return standardResponse(res, 200, undefined,'Update successfull')
+        return standardResponse(res, 200, undefined, 'Update successfull')
 
     } catch (err) {
         next(err)
@@ -113,8 +113,21 @@ export const getTrack = async (req, res, next) => {
     try {
         const id = req.params.id
         const track = await getTracksDb('price,description,image,duration,name,duration,num_courses,Instructor,__v,id ', '  id = ? limit 1 ', [id])
-        
+
         return standardResponse(res, 200, track)
+    } catch (err) {
+        next(err)
+    }
+}
+
+
+export const getTrackAndCourses = async (req, res, next) => {
+    try {
+        const id = req.params.id
+        const courses =await getTrackCourses(id)
+        const track = await getTracksDb('price,description,image,duration,name,duration,num_courses,Instructor,__v,id ', '  id = ? limit 1 ', [id])
+        return standardResponse(res, 200, { track, courses })
+      
     } catch (err) {
         next(err)
     }

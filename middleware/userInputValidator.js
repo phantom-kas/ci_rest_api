@@ -32,7 +32,10 @@ export const loginSchema = Joi.object({
 export const updateUserInfoSchema = Joi.object({
     firstName: Joi.string().required(),
     lastName: Joi.string().required(),
-    contact: Joi.string().required(),
+    gender: Joi.string().required(),
+    phone: Joi.string().required(),
+    location: Joi.string().required(),
+    gender: Joi.string().required(),
     description: Joi.string().required(),
 })
 export const courseSchema = Joi.object({
@@ -48,7 +51,6 @@ export const trackSchema = Joi.object({
     duration: Joi.string().required(),
     instructor: Joi.string().required(),
     description: Joi.string().required(),
-    // track: Joi.string().required(),
 })
 
 export const validateUserRequest = (req, res, next, validationObject) => {

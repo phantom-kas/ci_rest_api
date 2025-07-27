@@ -109,7 +109,7 @@ export const verifyEmail = async (req, res, next, user = null) => {
     try {
         await sendEmail(email, verificationEmail(code));
         // res.json({ message: 'Verification code sent' });
-        standardResponse(res, 200, undefined, 'Verification code sent');
+        standardResponse(res, 200, {id}, 'Verification code sent');
     } catch (err) {
         next(err)
     }

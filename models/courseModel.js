@@ -25,9 +25,9 @@ export const increaeseTrackCourses = async (track, num = 1) => {
 
 export const increaseMonthlyCoursesCount = async (num = 1) => {
     const month = getMonth()
-    const [result] = await db.query("UPDATE app_state set courses_count = courses_count + ?", [month, num],)
+    const [result] = await db.query("UPDATE monthly_state set courses_count = courses_count + ? where month = ?", [ num,month],)
     if (result.affectedRows < 1) {
-        await db.query("INSERT INTO app_state  (courses_count,nonth)  values(?,?)", [num, month])
+        await db.query("INSERT INTO monthly_state  (courses_count,month)  values(?,?)", [num, month])
     }
 }
 

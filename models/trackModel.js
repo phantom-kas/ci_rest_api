@@ -18,9 +18,9 @@ export const createTrack = async (req, title, description, duration, price, file
 
 export const increaseMonthlyTrackCount = async (num) => {
     const month = getMonth()
-    const [result] = await db.query("UPDATE app_state set tracks_count = tracks_count + ?", [month, num],)
+    const [result] = await db.query("UPDATE monthly_state set tracks_count = tracks_count + ? where month = ?", [num,month],)
     if (result.affectedRows < 1) {
-        await db.query("INSERT INTO app_state  (tracks_count,nonth)  values(?,?)", [num, month])
+        await db.query("INSERT INTO monthly_state  (tracks_count,month)  values(?,?)", [num, month])
     }
 }
 
@@ -64,6 +64,11 @@ export const updateTrackDb = async (description, price, duration, instructor, ti
       return false
     }
     return true
+}
+
+export const getTrackCourses =async (id) => {
+    const [rows] = await db.query(`SELECT title,image,id from courses where track = ? `,[id]);
+    return rows;
 }
 
 

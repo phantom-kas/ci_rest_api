@@ -69,11 +69,14 @@ export const deleteFile = async (fileName, res) => {
   if (!fileName) {
     return null
   }
+  if (fileName == 'deleted') {
+    return null
+  }
   if (process.env.NODE_ENV !== 'production') {
     const __dirname = path.dirname(fileURLToPath(import.meta.url))
     // if(!/^[\w\-.]+$/.test(fileName)){
     //     return standardResponse(res, 500, undefined, 'Failed', undefined);
-    // }
+    // }p
     const filePath = path.join(__dirname, '..', fileName);
 
     fs.unlink(filePath, (err) => {

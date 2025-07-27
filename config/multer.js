@@ -3,6 +3,7 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import { standardResponse } from '../utils/utils.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const uploadDir = path.join(__dirname, '..', 'uploads');
@@ -100,4 +101,12 @@ export const createUploadMiddleware = (allowedMimeTypes = []) => {
     fileFilter,
     limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
   });
+};
+
+
+export const ensureFilePresent = (req, res, next,field = 'file') => {
+  if (!req.file && (!req.files || !req.files[field])) {
+    return standardResponse(res, 400, undefined, 'No file found. \n Please upload a file.');
+  }
+  next();
 };
