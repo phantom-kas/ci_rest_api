@@ -1,43 +1,70 @@
-import { deleteRefreshToken, storeRefereshTOken, getRtoken, getUserLoginDetails, getUserForToken, storeVerificationCode, getUserToken, setUserToEmailVerified, updateUserPassword, updateLastLogin } from "../models/authModel.js";
-import { generateCode, standardResponse } from "../utils/utils.js"
+import { deleteRefreshToken, storeRefereshTOken, getRtoken, getUserLoginDetails, getUserForToken, storeVerificationCode, getUserToken, setUserToEmailVerified, updateUserPassword, updateLastLogin, getRtokenByerssionID, revokeRtokens, getUSerPassword, updaePassword } from "../models/authModel.js";
+import { compareTokens, generateCode, standardResponse } from "../utils/utils.js"
 import bcrypt from 'bcrypt'
 import dotenv from 'dotenv';
 dotenv.config();
 import jwt from 'jsonwebtoken'
 import { sendEmail } from "../services/emailService.js";
 import { resetPasswordEmailHTML, verificationEmail } from "../emails/otp.js";
-import { getUserIDByEmail } from "../models/userModel.js";
-
+import { getUserIDByEmail, getUserService } from "../models/userModel.js";
+import { v4 as uuidv4 } from 'uuid';
 export const createAccessToken = (user, rtkn) => {
-    return jwt.sign({ ...user, rtkn }, process.env.ATOKEN_SECRET, { expiresIn: 3 * 60 * 60 })
+    return jwt.sign({ ...user, rtkn }, process.env.ATOKEN_SECRET, { expiresIn: 60 * 60 * 3 })
 }
 
-export const createRefereshToken = (userInfo) => {
-    let refreshtoken = jwt.sign(userInfo, process.env.RTOKEN_SECRET, { expiresIn: 24 * 60 * 60 })
-    let tokenId = storeRefereshTOken(refreshtoken, userInfo.id)
+export const createRefereshToken = async (userInfo, ancestor = null) => {
+    let uuid = uuidv4()
+    let refreshtoken = jwt.sign({ ...userInfo, uuid }, process.env.RTOKEN_SECRET, { expiresIn: 24 * 60 * 60 })
+    let tokenId = await storeRefereshTOken(refreshtoken, userInfo.id, ancestor, uuid)
     return { refreshtoken, tokenId }
 }
 
 export const generateAtoken = async (req, res, next) => {
     const { refreshToken } = req.body
     if (!refreshToken) {
-        standardResponse(res, 401, undefined, 'Access denied');
+        return standardResponse(res, 401, undefined, 'Access denied');
     }
-    if (getRtoken(refreshToken).length < 1) {
+
+    let decoded
+    try {
+        decoded = jwt.verify(refreshToken, process.env.RTOKEN_SECRET)
+    } catch (error) {
+        standardResponse(res, 403, undefined, 'Token not valid.');
+        return
+    }
+    const session_id = decoded.uuid
+    const oldToken = await getRtokenByerssionID(session_id)
+
+    if (oldToken.length < 1) {
         standardResponse(res, 403, undefined, 'Token not valid');
         return
     }
-    jwt.verify(refreshToken, process.env.RTOKEN_SECRET, (err, user) => {
-        if (err) {
-            standardResponse(res, 403, undefined, err.message);
-            return
-        }
-        let userInfo = getUserForToken(userInfo.id)
-        const { refreshtoken, tokenId } = createRefereshToken(userInfo)
-        const accessToken = createAccessToken(userInfo, tokenId)
-        deleteRefreshToken(refreshToken)
-        standardResponse(res, 200, { accessToken, refreshToken: refreshtoken })
-    })
+
+    if (oldToken[0]['is_revoken'] == 1) {
+        standardResponse(res, 403, undefined, 'Token revoked');
+        return
+    }
+    if (!await compareTokens(refreshToken, oldToken[0]['token'])) {
+        standardResponse(res, 403, undefined, 'Token not valid.');
+        return
+    }
+
+
+    const ancestor = oldToken[0]['ancestor'] ?? oldToken[0]['id']
+
+    console.log('---------------------------')
+    console.log('an' + oldToken[0]['ancestor'])
+    console.log('old' + oldToken[0]['id'])
+    console.log('tkn' + ancestor)
+    console.log('---------------------------')
+    let userInfo = await getUserForToken(decoded.id)
+    await revokeRtokens(ancestor)
+    const { refreshtoken, tokenId } = await createRefereshToken(userInfo, ancestor)
+    const accessToken = createAccessToken(userInfo, tokenId)
+
+
+    standardResponse(res, 200, { accessToken, refreshToken: refreshtoken })
+
 }
 
 
@@ -54,26 +81,32 @@ export const login = async (req, res, next) => {
     console.log("--------------------------login----------------------",);
     const user = await getUserLoginDetails(email)
 
+    console.log(user);
     if (!user) {
         standardResponse(res, 401, undefined, 'Invalid credentials');
         return
     }
-    if (! await bcrypt.compare(password, user.password)) {
+    if (!await bcrypt.compare(password, user.password)) {
         return standardResponse(res, 401, undefined, 'Invalid credentials');
     }
     if (!await updateLastLogin(user.id)) {
         return standardResponse(res, 500, undefined, 'Something went wrong');
     }
-    let userInfo = await getUserForToken(user.id)
+    let userInfo = await getUserService(user.id)
+    userInfo = userInfo[0]
+    //  console.log(userInfo)
+    console.log('userid' + user.id)
     if (!userInfo) {
         standardResponse(res, 401, undefined, 'Invalid credentials');
         return
     }
-    const { refreshtoken, tokenId } = createRefereshToken(userInfo)
-    const accessToken = createAccessToken(userInfo, tokenId)
+    console.log(userInfo)
+    const payload = { email: userInfo.email, fristName: userInfo.fristName, lastName: userInfo.lastName, role: userInfo.role, id: userInfo.id }
+    const { refreshtoken, tokenId } = await createRefereshToken(payload)
+    const accessToken = createAccessToken(payload, tokenId)
     userInfo.refreshToken = refreshtoken
     userInfo.accessToken = accessToken
-    standardResponse(res, 200, userInfo, 'Login success')
+    standardResponse(res, 200, userInfo, 'Login success', { accessToken, refreshtoken })
     return
 
 }
@@ -84,13 +117,12 @@ export const checkToken = async (req, res, next) => {
     standardResponse(res, 200, req.user)
 }
 
-export const verifyEmail = async (req, res, next, user = null) => {
+export const verifyEmail = async (req, res, next, user = null, end = true) => {
     let email, id;
     if (user) {
         email = user.email
         id = user.id;
         console.log('user1')
-
         console.log(user)
     } else {
         email = req.user.email
@@ -109,7 +141,7 @@ export const verifyEmail = async (req, res, next, user = null) => {
     try {
         await sendEmail(email, verificationEmail(code));
         // res.json({ message: 'Verification code sent' });
-        standardResponse(res, 200, {id}, 'Verification code sent');
+        end && standardResponse(res, 200, { id }, 'Verification code sent');
     } catch (err) {
         next(err)
     }
@@ -193,4 +225,55 @@ export const validateAndResetPassword = async (req, res, next) => {
         return standardResponse(res, 200, undefined, 'Password reset successfully');
     }
     standardResponse(res, 500, undefined, 'Error resetting password');
+}
+
+
+
+export const logOut = async (req, res, next) => {
+    const { refreshToken } = req.body
+    if (!refreshToken) {
+        return standardResponse(res, 401, undefined, 'Access denied');
+    }
+    let decoded
+    try {
+        decoded = jwt.verify(refreshToken, process.env.RTOKEN_SECRET)
+    } catch (error) {
+        standardResponse(res, 403, undefined, 'Token not valid.');
+        return
+    }
+    const session_id = decoded.uuid
+    const oldToken = await getRtokenByerssionID(session_id)
+
+    if (oldToken.length < 1) {
+        standardResponse(res, 403, undefined, 'Token not valid');
+        return
+    }
+
+    if (oldToken[0]['is_revoken'] == 1) {
+        standardResponse(res, 403, undefined, 'Token revoked');
+        return
+    }
+    const ancestor = oldToken[0]['ancestor'] ?? oldToken[0]['id']
+    await revokeRtokens(ancestor)
+    return standardResponse(res, 200, undefined, 'Logout success');
+}
+
+
+export const changePassword = async (req, res, next) => {
+    const { oldPassword, newPassword } = req.body
+    const password = await getUSerPassword(req.user.id)
+    if (!password) {
+        standardResponse(res, 401, undefined, 'Invalid credentials');
+        return
+    }
+    if (!await bcrypt.compare(oldPassword, password)) {
+        return standardResponse(res, 400, undefined, 'Invalid credentials');
+    }
+    let salt = await bcrypt.genSalt(10);
+    const pwd = await bcrypt.hash(newPassword, salt);
+    if (await updaePassword(req.user.id, pwd)) {
+        return standardResponse(res, 200, undefined, 'Password changed successfully');
+    }
+
+    return standardResponse(res, 400, undefined, 'Password change error')
 }

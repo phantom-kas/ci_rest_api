@@ -51,13 +51,6 @@ export const deleteTrackId = async (trackId) => {
     return true;
 }
 
-export const editImageDb =async (filename,id)=>{
-     const [result] = await db.query("UPDATE track set image = ? , __v = __v+1 where id = ? limit 1", [filename, id],)
-    if (result.affectedRows < 1) {
-      return false
-    }
-    return true
-}
 export const updateTrackDb = async (description, price, duration, instructor, title,id)=>{
     const [result] = await db.query("UPDATE track set price = ?,name = ?,duration = ?,description = ?,Instructor=? where id = ? limit 1", [price,title,duration,description,instructor, id],)
     if (result.affectedRows < 1) {

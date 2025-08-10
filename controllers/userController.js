@@ -1,13 +1,13 @@
-import { editImageDb } from "../models/trackModel.js";
-import { checkUserExists, createUser, deleteUserService, editImageService, getAllUsersService, getUserService, increaseAdmins, increaseLearners, updateUserImage, updateUserInfo } from "../models/userModel.js"
-import { deleteFile, getPaginationDb, handleUpload, standardResponse } from "../utils/utils.js";
+import db from "../db.js";
+import { checkUserExists, createUser, deleteUserService, getUserService, increaseAdmins, increaseLearners, updateUserImage, updateUserInfo } from "../models/userModel.js"
+import { deleteFile, getPaginationService, handleUpload, standardResponse } from "../utils/utils.js";
 import { verifyEmail } from "./authController.js";
 
 export const getAllUsers = async (req, res, next) => {
     const lastId = parseInt(req.query.lastId) || null;
     let limit = parseInt(req.query.limit) || 10;
 
-    const tracks = await getPaginationDb(`SELECT id,firstName,lastName,email,isVerified,createdAt,__v,location,phone,image,createdAt,gender	
+    const tracks = await getPaginationService(`SELECT id,firstName,lastName,email,isVerified,createdAt,__v,location,phone,image,createdAt,gender	
    from users
         `, 'id', limit, lastId);
     standardResponse(res, 200, tracks)
@@ -15,10 +15,18 @@ export const getAllUsers = async (req, res, next) => {
 }
 
 
+export const getAllUser2 = async (req, res, next) => {
+
+    const [users] = await db.query(`SELECT id,firstName,lastName	
+   from users where email != 'deleted'`);
+    standardResponse(res, 200, users)
+    return
+}
+
 
 
 export const createAdmin = async (req, res, next) => {
-    const { firstName, lastName, email, password, contact, phone, location, gender, description } = req.body
+    const { firstName, lastName, email, password, phone, location, gender, description, disability } = req.body
     let created_by = null
     if (req.user != undefined) {
         created_by = req.user.id
@@ -27,7 +35,7 @@ export const createAdmin = async (req, res, next) => {
         if (await checkUserExists({ email })) {
             return standardResponse(res, 400, undefined, 'Email taken.\nPlease choose another one');
         }
-        const user = await createUser(firstName, lastName, email, password, contact, 'admin', created_by, phone, location, gender, description);
+        const user = await createUser(firstName, lastName, email, password, 'admin', created_by, phone, location, gender, description, disability);
         if (user) {
             const fileUrl = await handleUpload(req);
             await updateUserImage(user, fileUrl);
@@ -44,7 +52,7 @@ export const createAdmin = async (req, res, next) => {
 
 
 export const createLearner = async (req, res, next) => {
-    const { firstName, lastName, email, password, contact, phone, location, gender, description } = req.body
+    const { firstName, lastName, email, password, phone, location, gender, description, disability } = req.body
     let created_by = null
     if (req.user != undefined) {
         created_by = req.user.id
@@ -55,7 +63,7 @@ export const createLearner = async (req, res, next) => {
         if (await checkUserExists({ email })) {
             return standardResponse(res, 400, undefined, 'Email taken.\nPlease choose another one');
         }
-        const user = await createUser(firstName, lastName, email, password, contact, 'learner', created_by, phone, location, gender, description);
+        const user = await createUser(firstName, lastName, email, password, 'learner', created_by, phone, location, gender, description, disability);
         if (user) {
             const fileUrl = await handleUpload(req);
             await updateUserImage(user, fileUrl);
@@ -79,8 +87,8 @@ export const updateUser = async (req, res, next) => {
                 return standardResponse(res, 401, undefined, 'Access denied');
             }
         }
-        const { firstName, lastName, description, phone, location, gender, } = req.body
-        if (await updateUserInfo(firstName, lastName, description, phone, location, gender, id)) {
+        const { firstName, lastName, description, phone, location, gender, disability } = req.body
+        if (await updateUserInfo(firstName, lastName, description, phone, location, gender, id, disability)) {
             return standardResponse(res, 200, undefined, 'Update successful')
         }
         return standardResponse(res, 400, undefined, 'Update failed')
@@ -124,20 +132,3 @@ export const deleteUser = async (req, res, next) => {
 
 }
 
-
-
-export const editImage = async (req, res, next) => {
-    try {
-        const id = req.params.id
-        const user = await getUserService(id)
-        // console.log(id)
-        // console.log(track)
-        await deleteFile(user[0]['image'], res);
-        const fileUrl = await handleUpload(req);
-        await editImageService(id, fileUrl)
-        return standardResponse(res, 200, undefined, ' Update Successfull')
-    }
-    catch (err) {
-        next(err)
-    }
-}

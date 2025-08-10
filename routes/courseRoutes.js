@@ -1,8 +1,9 @@
 import express from 'express';
-import { addCourse, deleteCourse, editImage, getcourse, getCourses, updateCourse } from '../controllers/courseController.js';
+import { addCourse, deleteCourse, getcourse, getCourses, updateCourse } from '../controllers/courseController.js';
 import { adminProtected, authenticateAtoken } from '../middleware/auth.js';
 import { courseSchema, validateUserRequest } from '../middleware/userInputValidator.js';
 import { createUploadMiddleware } from '../config/multer.js';
+import { editImageUtil } from '../utils/utils.js';
 
 
 const allowedMimeTypes = ['image/jpeg', 'image/png', 'application/pdf', 'video/mp4'];
@@ -13,6 +14,6 @@ router.get('/courses', getCourses)
 router.put('/course/:id', authenticateAtoken, adminProtected, (req, res, next) => validateUserRequest(req, res, next, courseSchema), updateCourse)
 router.get('/course/:id', getcourse)
 router.delete('/course/:id', authenticateAtoken, adminProtected, deleteCourse)
-router.put('/course/image/:id', authenticateAtoken, upload.single('file'), adminProtected, editImage);
+router.put('/course/image/:id', authenticateAtoken, upload.single('file'), adminProtected, (req, res, next) => editImageUtil(req, res, next, 'courses'));
 
 export default router

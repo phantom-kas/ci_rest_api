@@ -10,6 +10,9 @@ import { standardResponse } from './utils/utils.js';
 import trackRouter from './routes/trackRoute.js'
 import path from 'path'
 import { fileURLToPath } from 'url';
+import learnerRouter from './routes/learnerRoutes.js'
+import invoiceRouter from './routes/invoiceRoutes.js'
+import reviewRouter from './routes/reviewRoutes.js'
 dotenv.config();
 let users = [1]
 const app = express();
@@ -21,6 +24,9 @@ app.use('/api', userRouter)
 app.use('/api', authRouter)
 app.use('/api', courseRouter)
 app.use('/api', trackRouter)
+app.use('/api', learnerRouter)
+app.use('/api', invoiceRouter)
+app.use('/api', reviewRouter)
 app.get('/test', async (req, res) => {
     const [rows] = await db.query("SELECT * from users");
     standardResponse(res, 200,rows,'success')

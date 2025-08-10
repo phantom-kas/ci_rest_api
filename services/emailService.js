@@ -24,7 +24,7 @@ export async function sendEmail(to,emailTemlate,subject='Verify Your Email') {
 
 
   await transporter.sendMail({
-    from: `"CI Client" <${process.env.EMAIL_USER}>`,
+    from: `"GClient" <${process.env.EMAIL_USER}>`,
     to,
     subject,
     html,

@@ -5,6 +5,8 @@ import { fileURLToPath } from 'url';
 import fs from 'fs';
 import db from '../db.js';
 import { v4 as uuidv4 } from 'uuid';
+import bcrypt from 'bcrypt'
+import crypto from 'crypto';
 
 dotenv.config();
 export const standardResponse = (res, status, data = undefined, message = undefined, messages = undefined, obj = undefined) => {
@@ -100,7 +102,7 @@ export const deleteFile = async (fileName, res) => {
 
 
 
-export const getPaginationDb = async (sql, cursor, limit, lastId = null, where = '', queryParams = []) => {
+export const getPaginationService = async (sql, cursor, limit, lastId = null, where = '', queryParams = [],order='') => {
   limit++
   let queryParams1 = [...queryParams, limit];
   let lastSql = ''
@@ -110,119 +112,12 @@ export const getPaginationDb = async (sql, cursor, limit, lastId = null, where =
     // console.log('lllllllllllllllllllllllllllllllllll'+lastId)
   }
   let where1 = `where 1 ${lastSql} ${where}`;
-  let fullSql = `${sql} ${where1} ORDER BY ${cursor} DESC LIMIT ?`;
+  let fullSql = `${sql} ${where1}  ORDER BY ${order} ${cursor} DESC LIMIT ?`;
   // console.log(fullSql+'-----')
   // console.log(queryParams1)
   const [rows] = await db.query(fullSql, queryParams1);
   return rows;
 }
-
-
-
-
-// export const handleUpload = async (req, options = {}) => {
-//   const {
-//     allowedMimeTypes = [],
-//     uploadsDir = 'uploads',
-//   } = options;
-
-//   const file = req.file;
-//   if (!file) throw new Error('No file uploaded');
-
-//   if (!allowedMimeTypes.includes(file.mimetype)) {
-//     throw new Error('Unsupported file type');
-//   }
-
-//   if (process.env.NODE_ENV === 'production') {
-//     // Upload to Cloudinary using memory buffer
-//     const base64 = file.buffer.toString('base64');
-//     const fileStr = `data:${file.mimetype};base64,${base64}`;
-
-//     const result = await cloudinary.uploader.upload(fileStr, {
-//       folder: 'uploads',
-//       resource_type: 'auto',
-//     });
-
-//     return result.secure_url;
-//   } else {
-//     // Dev: return local path
-//     return `/${uploadsDir}/${file.filename}`;
-//   }
-// };
-
-
-// export const handleUpload = async (req) => {
-//   const __dirname = path.dirname(fileURLToPath(import.meta.url));
-//   const uploadsDir = path.join(__dirname, '..', 'uploads');
-
-//   const file = req.file;
-//   if (!file) throw new Error('No file uploaded');
-
-//   if (process.env.NODE_ENV === 'production') {
-//     const base64 = file.buffer.toString('base64');
-//     const fileStr = `data:${file.mimetype};base64,${base64}`;
-
-//     const result = await cloudinary.uploader.upload(fileStr, {
-//       folder: 'uploads',
-//       resource_type: 'auto',
-//     });
-
-//     return result.secure_url;
-//   } else {
-//     const ext = path.extname(file.originalname);
-//     const filename = `${file.fieldname}-${uuidv4()}${ext}`;
-//     const outputDir = path.resolve(uploadsDir); // ✅ resolve to absolute path
-//     const filePath = path.join(outputDir, filename);
-
-//     //  fs.mkdir(outputDir, { recursive: true }); // ✅ make sure dir exists
-//      fs.writeFile(filePath, file.buffer);
-
-//     return `/${uploadsDir}/${filename}`;
-//   }
-// };
-
-
-
-// export const handleUpload = async (req, options = {}) => {
-//   const __dirname = path.dirname(fileURLToPath(import.meta.url));
-//   const uploadsDir = path.join(__dirname, '..', 'uploads');
-
-
-//   const file = req.file;
-//   if (!file) throw new Error('No file uploaded');
-
-//   if (process.env.NODE_ENV === 'production') {
-//     // Read from disk and upload to Cloudinary
-//     const fileBuffer = await fs.readFile(file.path); // ✅ read from disk
-//     const base64 = fileBuffer.toString('base64');
-//     const fileStr = `data:${file.mimetype};base64,${base64}`;
-
-//     const result = await cloudinary.uploader.upload(fileStr, {
-//       folder: 'uploads',
-//       resource_type: 'auto',
-//     });
-
-//     return result.secure_url;
-//   } else {
-//     // Dev: rename or move file
-//     const ext = path.extname(file.originalname);
-//     const filename = `${file.fieldname}-${uuidv4()}${ext}`;
-//     const absoluteUploadsDir = path.resolve(uploadsDir);
-//     const destPath = path.join(absoluteUploadsDir, filename);
-
-//     console.log('Destination Path:', destPath);
-//     console.log('Upload Path:', absoluteUploadsDir);
-//     if (!uploadsDir || typeof uploadsDir !== 'string') {
-//       throw new Error('uploadsDir must be a valid string path');
-//     }
-//      fs.mkdirSync(absoluteUploadsDir, { recursive: true });
-
-//     const fileBuffer =  fs.readFileSync(file.path); // ✅ read from disk
-//      fs.writeFileSync(destPath, fileBuffer);         // ✅ save to new path
-
-//     return `/uploads/${filename}`;
-//   }
-// };
 
 
 
@@ -267,3 +162,58 @@ export const handleUpload = async (req, options = {}) => {
 
 
 
+export const editImageInDbService = async (filename, id, tabel) => {
+  const [result] = await db.query(`UPDATE ${tabel} set image = ? , __v = __v+1 where id = ? limit 1`, [filename, id],)
+  if (result.affectedRows < 1) {
+    return false
+  }
+  return true
+}
+
+
+
+export const getItemService = async (tabel,cols = '*', where = '1', params = undefined) => {
+    const [rows] = await db.query(`SELECT ${cols} from ${tabel} where ${where}`, params);
+    return rows;
+}
+
+export const editImageUtil = async (req, res, next, tabel) => {
+  try {
+    const id = req.params.id
+    const item = await getItemService(tabel,' image ', '  id = ? limit 1 ', [id])
+    await deleteFile(item[0]['image'], res);
+    const fileUrl = await handleUpload(req);
+    await editImageInDbService(fileUrl, id, tabel)
+    return standardResponse(res, 200, {url:fileUrl}, ' Update Successfull')
+  }
+  catch (err) {
+    next(err)
+  }
+}
+
+
+
+export const hashToken = (tkn) => bcrypt.hash(tkn, 12)
+export const compareTokens =(tkn1,tkn2)=> bcrypt.compare(tkn1, tkn2)
+
+const key = Buffer.from(process.env.ENCRYPTION_KEY, 'hex');
+const algorithm = 'aes-256-cbc';
+
+export const decrypt = (encrypted, ivHex) => {
+  const iv = Buffer.from(ivHex, 'hex');
+  const decipher = crypto.createDecipheriv(algorithm, key, iv);
+  let decrypted = decipher.update(encrypted, 'hex', 'utf8');
+  decrypted += decipher.final('utf8');
+  return decrypted;
+};
+
+export const encrypt = (text) => {
+  const iv = crypto.randomBytes(16); // unique per encryption
+  const cipher = crypto.createCipheriv(algorithm, key, iv);
+  let encrypted = cipher.update(text, 'utf8', 'hex');
+  encrypted += cipher.final('hex');
+  return {
+    encryptedData: encrypted,
+    iv: iv.toString('hex'), // send this with metadata
+  };
+};

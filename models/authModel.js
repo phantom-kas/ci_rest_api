@@ -1,12 +1,17 @@
 import db from "../db.js"
-import { getDateTime, getFutureTimeGMT } from "../utils/utils.js";
+import { getDateTime, getFutureTimeGMT, hashToken } from "../utils/utils.js";
 import bcrypt from 'bcrypt'
 
 export const getRtoken = async (rtoken) => {
-    const [rows] = await db.query("SELECT refreshToken from refreshToken where refreshToken = ? ", [rtoken]);
+    const [rows] = await db.query("SELECT token ,ancestor ,is_revoken ,session_id id from rtokens where token = ? limit 1", [rtoken]);
     return rows
 }
 
+
+export const getRtokenByerssionID = async (session_id) => {
+    const [rows] = await db.query("SELECT token ,ancestor ,is_revoken, id from rtokens where session_id = ? limit 1", [session_id]);
+    return rows
+}
 
 
 export const deleteRefreshToken = async (rtoken) => {
@@ -18,9 +23,17 @@ export const deleteRefreshToken = async (rtoken) => {
 }
 
 
+export const revokeRtokens = async (ancestor) => {
+    await db.query("UPDATE rtokens set is_revoken = 1 where ancestor = ? or id = ?", [ancestor,ancestor])
+}
 
-export const storeRefereshTOken = async (rtoken, user_id) => {
-    const [result] = await db.query("INSERT INTO rtokens  (user_id,token,created_at) values (?,?,?) limit 1", [user_id, rtoken, getDateTime()])
+
+
+export const storeRefereshTOken = async (rtoken, user_id, ancestor = null,uuid=null) => {
+    const hashedTkn =await hashToken(rtoken)
+    console.log(hashedTkn)
+    console.log('=========================================')
+    const [result] = await db.query("INSERT INTO rtokens (user_id,token,created_at,ancestor,session_id) values (?,?,?,?,?) limit 1", [user_id, hashedTkn, getDateTime(), ancestor,uuid])
     return result.insertId
 }
 
@@ -32,8 +45,24 @@ export const getUserForToken = async (user_id) => {
     return rows[0];
 }
 
+export const updaePassword = async (user_id, password, ) => {
+    const [result] = await db.query("UPDATE users set password = ?  where id = ? limit 1", [password, user_id])
+    if (result.affectedRow < 1) {
+        return false
+    }
+    return true
+}
+
+export const getUSerPassword = async (id)=>{
+    const [rows] = await db.query("SELECT id,password from users where  id = ?",[id])
+    if(rows.length < 1){
+        return false
+    }
+    return rows[0]['password']
+}
+
 export const updateLastLogin = async (id) => {
-    const [result] = await db.query("UPDATE users set lastLogin=? where id = ? limit 1", [getDateTime(),id])
+    const [result] = await db.query("UPDATE users set lastLogin=? where id = ? limit 1", [getDateTime(), id])
     if (result.affectedRow < 1) {
         return false
     }
@@ -94,5 +123,3 @@ export const updateUserPassword = async (user_id, password, salt) => {
     }
     return true
 }
-
-

@@ -29,14 +29,14 @@ export const increaseAdmins = async (num = 1) => {
 
 export const createUser = async (
     firstName, lastName, email,
-    password,
-    contact, role, created_by = null, phone, location, gender,description) => {
-    const sql = "INSERT INTO users (firstname,lastName,email,password,salt,contact,role,isVerified,createdAt,__v,created_by,phone,location,gender,description) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+    password
+    , role, created_by = null, phone, location, gender, description, disability) => {
+    const sql = "INSERT INTO users (firstname,lastName,email,password,salt,role,isVerified,createdAt,__v,created_by,phone,location,gender,description,disability) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
     let salt = await bcrypt.genSalt(10);
     const pwd = await bcrypt.hash(password, salt);
 
     const [result] = await db.query(sql, [
-        firstName, lastName, email, pwd, salt, contact, role, 0, getDateTime(), 0, created_by, phone, location, gender,description])
+        firstName, lastName, email, pwd, salt, role, 0, getDateTime(), 0, created_by, phone, location, gender, description, disability])
     if (result.affectedRows < 1) {
         return false
     }
@@ -54,9 +54,9 @@ export const login = async (email, password) => {
     const [rows] = await db.query("SELECT password,salt from users where email = ?", [email]);
 }
 
-export const updateUserInfo = async (firstName, lastName, description, phone, location,gender, id) => {
-    const [result] = await db.query("UPDATE users set firstName = ? ,lastName = ?,description=? ,phone=?,location=? ,gender = ?  where id = ? limit 1", [
-        firstName, lastName, description, phone, location,gender, id])
+export const updateUserInfo = async (firstName, lastName, description, phone, location, gender, id, disability) => {
+    const [result] = await db.query("UPDATE users set firstName = ? ,lastName = ?,description=? ,phone=?,location=? ,gender = ?,disability=?  where id = ? limit 1", [
+        firstName, lastName, description, phone, location, gender, disability, id])
     if (result.affectedRows > 0) {
         await db.query("UPDATE users set __v = __v + 1 where id = ? ", [id])
         return true
@@ -66,7 +66,7 @@ export const updateUserInfo = async (firstName, lastName, description, phone, lo
 
 
 export const getUserService = async (id) => {
-    const [rows] =await db.query("SELECT role,description, id,firstName,lastName,email,isVerified,createdAt,__v,location,phone,image,createdAt,gender from users where id = ?", [id]);
+    const [rows] = await db.query("SELECT id,disability,role,description,disability, id,firstName,lastName,email,isVerified,createdAt,__v,location,phone,image,createdAt,gender from users where id = ? limit 1", [id]);
     return rows
 }
 
@@ -89,7 +89,7 @@ export const updateUserImage = async (id, fileUrl) => {
 
 
 export const deleteUserService = async (id,) => {
-    const [result] = await db.query("UPDATE users set firstName = 'deleted' ,lastName = 'deleted',description='deleted', phone='deleted',location='deleted', gender = 'deleted',image='deleted',email='deleted'  where id = ? limit 1", [ id],)
+    const [result] = await db.query("UPDATE users set firstName = 'deleted' ,lastName = 'deleted',description='deleted', phone='deleted',location='deleted', gender = 'deleted',image='deleted',email='deleted'  where id = ? limit 1", [id],)
     if (result.affectedRows < 1) {
         return false
     }
@@ -101,7 +101,7 @@ export const deleteUserService = async (id,) => {
 
 export const increaseMonthlyLearnerCount = async (num = 1) => {
     const month = getMonth()
-    const [result] = await db.query("UPDATE monthly_state set learners_count = learners_count + ? where month = ? limit 1", [num,month],)
+    const [result] = await db.query("UPDATE monthly_state set learners_count = learners_count + ? where month = ? limit 1", [num, month],)
     if (result.affectedRows < 1) {
         await db.query("INSERT INTO monthly_state  (learners_count,month)  values(?,?) limit 1", [num, month])
     }
@@ -109,17 +109,8 @@ export const increaseMonthlyLearnerCount = async (num = 1) => {
 
 export const increaseMonthlyAdminCount = async (num = 1) => {
     const month = getMonth()
-    const [result] = await db.query("UPDATE monthly_state set admins_count = admins_count + ? where month = ? limit 1", [ num,month],)
+    const [result] = await db.query("UPDATE monthly_state set admins_count = admins_count + ? where month = ? limit 1", [num, month],)
     if (result.affectedRows < 1) {
         await db.query("INSERT INTO monthly_state  (admins_count,month)  values(?,?) limit 1", [num, month])
     }
-}
-
-
-export const editImageService = async (id, fileUrl) => {
-    const [result] = await db.query("UPDATE users set image = ? , __v = __v+1 where id = ? limit 1", [fileUrl, id],)
-    if (result.affectedRows < 1) {
-        return false
-    }
-    return true
 }
