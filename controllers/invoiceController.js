@@ -110,11 +110,11 @@ export const geAllInvoices = async (req, res, next) => {
     let limit = parseInt(req.query.limit) || 10;
     let invoices
     if (user.role == 'admin') {
-        invoices = await getPaginationService(`SELECT i.id,t.name,i.amount, i.paid,i.created_at,i.status,i.last_update ,u.firstname,u.image,u.lastName from invoice as i inner join users as u on i.user = u.id inner join track as t on t.id = i.track `, 'i.id', limit, lastId);
+        invoices = await getPaginationService(`SELECT i.id,t.name,i.amount, i.paid,i.created_at,i.status,i.last_update ,u.firstName,u.image,u.lastName from invoice as i inner join users as u on i.user = u.id inner join track as t on t.id = i.track `, 'i.id', limit, lastId);
     } else {
         let where = ' AND i.user = ?';
         let params = [req.user.id]
-        invoices = await getPaginationService(`SELECT i.id,t.name,i.amount, i.paid,i.created_at,i.status,i.last_update ,u.firstname,u.image,u.lastName from invoice as i inner join users as u on i.user = u.id inner join track as t on t.id = i.track `, 'i.id', limit, lastId, where, params);
+        invoices = await getPaginationService(`SELECT i.id,t.name,i.amount, i.paid,i.created_at,i.status,i.last_update ,u.firstName,u.image,u.lastName from invoice as i inner join users as u on i.user = u.id inner join track as t on t.id = i.track `, 'i.id', limit, lastId, where, params);
     }
     standardResponse(res, 200, invoices)
     return

@@ -17,7 +17,7 @@ export const getAllUsers = async (req, res, next) => {
 
 export const getAllUser2 = async (req, res, next) => {
 
-    const [users] = await db.query(`SELECT id,firstName,lastName	
+    const [users] = await db.query(`SELECT image,id,firstName,lastName	
    from users where email != 'deleted'`);
     standardResponse(res, 200, users)
     return
