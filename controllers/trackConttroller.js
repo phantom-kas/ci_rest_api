@@ -1,3 +1,4 @@
+import { getTrackService } from "../models/learnerModel.js";
 import { checkTrackExists, createTrack, deleteTrackId, getTrackCourses, getTracksDb, increaseCourseTrack, updateTrackDb, updateV } from "../models/trackModel.js";
 import { deleteFile, getPaginationService, handleUpload, standardResponse } from "../utils/utils.js";
 
@@ -37,7 +38,7 @@ export const getTracks = async (req, res, next) => {
 
     let order = '';
 
-    if(req.query.orderbyratds){
+    if (req.query.orderbyratds) {
         order = ' t.rating DESC ,';
     }
     const tracks = await getPaginationService(`SELECT t.id, t.name ,t.price,description,t.image,t.duration,t.num_courses,t.Instructor ,
@@ -46,7 +47,7 @@ export const getTracks = async (req, res, next) => {
     WHERE c.track = t.id
     LIMIT 2) AS courses
    from track as t
-        `, 't.id', limit, lastId,'','',order);
+        `, 't.id', limit, lastId, '', '', order);
     standardResponse(res, 200, tracks)
     return
 }
@@ -112,10 +113,18 @@ export const getTrackAndCourses = async (req, res, next) => {
     try {
         const id = req.params.id
         const courses = await getTrackCourses(id)
-        const track = await getTracksDb('created_at, price,description,image,duration,name,duration,num_courses,Instructor,__v,id ', '  id = ? limit 1 ', [id])
+        const track = await getTrackService(id);
         return standardResponse(res, 200, { track, courses })
 
     } catch (err) {
         next(err)
     }
+}
+
+
+export const getTrackLearners = async (req, res, next) => {
+    const lastId = parseInt(req.query.lastId) || null;
+    let limit = parseInt(req.query.limit) || 10;
+    const trackLearners = await getPaginationService(`SELECT ut.created_at, ut.id, u.id as user_id, u.image,u.firstname,u.lastName,ut.status,ut.amount from user_track as ut inner join users as u on u.id = ut.user`, 'ut.id', limit, lastId, '', '');
+    standardResponse(res, 200, trackLearners)
 }

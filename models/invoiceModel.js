@@ -1,5 +1,5 @@
 import db from "../db.js";
-import { getDateTime } from "../utils/utils.js";
+import { getDateTime, getMonth } from "../utils/utils.js";
 
 
 
@@ -30,7 +30,7 @@ export const getInvoiceService = async (where = ' 1', cols = 'id', params = []) 
 
 
 export const addUserTrack = async (userId, trackId, amount) => {
-    const [result] = await db.query("INSERT INTO user_track (user, track, amount) VALUES (?,?,?)", [userId, trackId, amount]);
+    const [result] = await db.query("INSERT INTO user_track (user, track, amount,created_at) VALUES (?,?,?,?)", [userId, trackId, amount,getDateTime()]);
     return result.insertId;
 }
 
@@ -48,11 +48,30 @@ export const updateInvoicePayment = async (status, amount, last_update, id) => {
 
 
 
-export const updateUserTrackAmount = async (status, amount,user,track) => {
+export const updateUserTrackAmount = async (status, amount, user, track) => {
     const [result] = await db.query(`UPDATE user_track set status = ?,amount = amount + ?  where user = ?
-    and   track = ?  limit 1`, [status, amount, user,track],)
+    and   track = ?  limit 1`, [status, amount, user, track],)
     if (result.affectedRows < 1) {
         return false
     }
     return true
+}
+
+
+export const increaseInvoiceCount = async (num) => {
+    const [result] = await db.query(`UPDATE app_state set invoice_count = invoice_count + ? `, [num])
+    if (result.affectedRows < 1) {
+        return false
+    }
+    await increaseMonthlyInvoiceCount(num)
+    return true
+}
+
+
+export const increaseMonthlyInvoiceCount = async (num) => {
+    const month = getMonth()
+    const [result] = await db.query("UPDATE monthly_state set invoice_count = invoice_count + ? where month = ?", [num, month],)
+    if (result.affectedRows < 1) {
+        await db.query("INSERT INTO monthly_state  (invoice_count,month)  values(?,?)", [num, month])
+    }
 }

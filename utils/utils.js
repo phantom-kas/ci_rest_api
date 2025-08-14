@@ -7,6 +7,8 @@ import db from '../db.js';
 import { v4 as uuidv4 } from 'uuid';
 import bcrypt from 'bcrypt'
 import crypto from 'crypto';
+import axios from 'axios';
+
 
 dotenv.config();
 export const standardResponse = (res, status, data = undefined, message = undefined, messages = undefined, obj = undefined) => {
@@ -108,7 +110,7 @@ export const deleteFile = async (fileName, res) => {
 
 
 
-export const getPaginationService = async (sql, cursor, limit, lastId = null, where = '', queryParams = [],order='') => {
+export const getPaginationService = async (sql, cursor, limit, lastId = null, where = '', queryParams = [], order = '') => {
   limit++
   let queryParams1 = [...queryParams, limit];
   let lastSql = ''
@@ -178,19 +180,19 @@ export const editImageInDbService = async (filename, id, tabel) => {
 
 
 
-export const getItemService = async (tabel,cols = '*', where = '1', params = undefined) => {
-    const [rows] = await db.query(`SELECT ${cols} from ${tabel} where ${where}`, params);
-    return rows;
+export const getItemService = async (tabel, cols = '*', where = '1', params = undefined) => {
+  const [rows] = await db.query(`SELECT ${cols} from ${tabel} where ${where}`, params);
+  return rows;
 }
 
 export const editImageUtil = async (req, res, next, tabel) => {
   try {
     const id = req.params.id
-    const item = await getItemService(tabel,' image ', '  id = ? limit 1 ', [id])
+    const item = await getItemService(tabel, ' image ', '  id = ? limit 1 ', [id])
     await deleteFile(item[0]['image'], res);
     const fileUrl = await handleUpload(req);
     await editImageInDbService(fileUrl, id, tabel)
-    return standardResponse(res, 200, {url:fileUrl}, ' Update Successfull')
+    return standardResponse(res, 200, { url: fileUrl }, ' Update Successfull')
   }
   catch (err) {
     next(err)
@@ -200,7 +202,7 @@ export const editImageUtil = async (req, res, next, tabel) => {
 
 
 export const hashToken = (tkn) => bcrypt.hash(tkn, 12)
-export const compareTokens =(tkn1,tkn2)=> bcrypt.compare(tkn1, tkn2)
+export const compareTokens = (tkn1, tkn2) => bcrypt.compare(tkn1, tkn2)
 
 const key = Buffer.from(process.env.ENCRYPTION_KEY, 'hex');
 const algorithm = 'aes-256-cbc';
@@ -223,3 +225,33 @@ export const encrypt = (text) => {
     iv: iv.toString('hex'), // send this with metadata
   };
 };
+
+
+let cachedRate = { rate: null, lastFetched: null, numHits: 0 }
+export const getExchangeRate = async (to, from = 'USD') => {
+  try {
+    const now = Date.now()
+    if (to == 'GHS' && cachedRate.rate && (now - cachedRate.lastFetched < process.env.EXCANGERAES_CACHE_DURATION)) {
+      cachedRate.numHits++
+      console.log('Cached rate used:', cachedRate.rate, 'Hits:', cachedRate.numHits);
+      return cachedRate.rate
+    }
+    return axios.get(`https://v6.exchangerate-api.com/v6/${process.env.EXCANGERAES_API_KEY}/pair/USD/${to}`)
+      .then((res) => {
+        if (res.data.result === 'success') {
+
+          console.log('----------------------------------------------------')
+          cachedRate = { rate: res.data.conversion_rate, lastFetched: now, numHits: 0 }
+          console.log(res.data.conversion_rate)
+          console.log('----------------------------------------------------')
+          return res.data.conversion_rate;
+        }
+        console.error(error);
+        throw error;
+      })
+  } catch (error) {
+    console.error('Error fetching exchange rate:', error);
+    throw error;
+  }
+}
+

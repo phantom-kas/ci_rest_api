@@ -28,6 +28,7 @@
     "multer": "^2.0.2",
     "mysql2": "^3.14.2",
     "nodemailer": "^7.0.5",
+    "stripe": "^18.4.0",
     "uuid": "^11.1.0"
   },
   "devDependencies": {

@@ -1,6 +1,6 @@
 import { checkCourseExistsService, createCourseService, deleteCourseByIdService, getCoursesService, getCoursesService2, increaeseTrackCoursesService, increaseCourseCountService, updateCourseDb, updateV } from "../models/courseModel.js";
 import { checkTrackExists } from "../models/trackModel.js";
-import { deleteFile, handleUpload, standardResponse } from "../utils/utils.js";
+import { deleteFile, getPaginationService, handleUpload, standardResponse } from "../utils/utils.js";
 
 export const addCourse = async (req, res, next) => {
     try {
@@ -29,9 +29,19 @@ export const getCourses = async (req, res, next) => {
     try {
         const lastId = parseInt(req.query.lastId) || null;
         let limit = parseInt(req.query.limit) || 10;
-        limit++
-        console.log('last id =----------------' + lastId)
-        const rows = await getCoursesService2(limit, lastId);
+        let params = []
+        let where = '';
+
+        if (req.query.search != undefined) {
+            where += ' and (c.title like ? || t.name like ? || t.Instructor like ?)';
+            params.push('%' + req.query.search + '%')
+            params.push('%' + req.query.search + '%')
+            params.push('%' + req.query.search + '%')
+        }
+        let sql = `SELECT c.id, c.image,c.title,c.track , t.name as trackName,c.created_at from courses as c inner join track as t on c.track = t.id `
+
+        const rows = await getPaginationService(sql, 'c.id', limit, lastId, where, params);
+
         return standardResponse(res, 200, rows)
     }
     catch (err) {

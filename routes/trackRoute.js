@@ -1,7 +1,7 @@
 import express from 'express';
 import { adminProtected, authenticateAtoken } from '../middleware/auth.js';
 import {  trackSchema, validateUserRequest } from '../middleware/userInputValidator.js';
-import { addTrack, deleteTrack, getTrack, getTrackAndCourses, getTracks, getTracksOptions, updateTrack } from '../controllers/trackConttroller.js';
+import { addTrack, deleteTrack, getTrack, getTrackAndCourses, getTrackLearners, getTracks, getTracksOptions, updateTrack } from '../controllers/trackConttroller.js';
 import { createUploadMiddleware } from '../config/multer.js';
 import { editImageUtil } from '../utils/utils.js';
 
@@ -14,6 +14,7 @@ router.get('/tracks',getTracks);
 router.put('/track/:id',authenticateAtoken, adminProtected,(req,res,next)=>validateUserRequest(req,res,next,trackSchema),updateTrack);
 router.get('/tracks/options',getTracksOptions);
 router.get('/track/:id',getTrack);
+router.get('/track-learners',authenticateAtoken,adminProtected,getTrackLearners);
 router.get('/track-courses/:id',getTrackAndCourses);
 router.put('/track/image/:id', authenticateAtoken,upload.single('file'), adminProtected, (req, res, next) => editImageUtil(req, res, next, 'track'));
 export default router
