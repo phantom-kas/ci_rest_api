@@ -80,7 +80,7 @@ export const trackSchema = Joi.object({
 
 
 export const reviewSchema = Joi.object({
-    review: Joi.optional(),
+    review: Joi.string(),
     rating: Joi.number().min(1).max(5).required(),
     track: Joi.string().required(),
     // us: Joi.string().required(),

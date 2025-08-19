@@ -7,9 +7,31 @@ export const getAllUsers = async (req, res, next) => {
     const lastId = parseInt(req.query.lastId) || null;
     let limit = parseInt(req.query.limit) || 10;
 
+    let where = '';
+    let params = ''
+    if (req.query.type) {
+        where = ' and role = ? '
+        if (req.query.type == 'admins')
+            params = ['admin']
+        else
+            params = ['learner']
+    }
+
+
+    
+          
+    
+        if (req.query.search != undefined) {
+            where += ' and (firstName like ?  || lastName like ? || email like ? || location like ? || disability like ?)';
+            params.push('%' + req.query.search + '%')
+            params.push('%' + req.query.search + '%')
+            params.push('%' + req.query.search + '%')
+            params.push('%' + req.query.search + '%')
+            params.push('%' + req.query.search + '%')
+            // adssa
+        }
     const tracks = await getPaginationService(`SELECT id,firstName,lastName,email,isVerified,createdAt,__v,location,phone,image,createdAt,gender	
-   from users
-        `, 'id', limit, lastId);
+   from users`, 'id', limit, lastId, where, params);
     standardResponse(res, 200, tracks)
     return
 }

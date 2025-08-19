@@ -38,6 +38,15 @@ export const getTracks = async (req, res, next) => {
 
     let order = '';
 
+    let where = '';
+        let params = []
+
+    if (req.query.search != undefined) {
+        where += ' and (t.name like ?  || t.Instructor like ?)';
+        params.push('%' + req.query.search + '%')
+        params.push('%' + req.query.search + '%')
+        // adssa
+    }
     if (req.query.orderbyratds) {
         order = ' t.rating DESC ,';
     }
@@ -47,7 +56,7 @@ export const getTracks = async (req, res, next) => {
     WHERE c.track = t.id
     LIMIT 2) AS courses
    from track as t
-        `, 't.id', limit, lastId, '', '', order);
+        `, 't.id', limit, lastId, where, params,order);
     standardResponse(res, 200, tracks)
     return
 }

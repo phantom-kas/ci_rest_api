@@ -6,5 +6,5 @@ import { createReview, getReviews } from '../controllers/reviewController.js';
 const router = express.Router()
 router.post('/create_review', (req, res, next) => validateUserRequest(req, res, next, reviewSchema), authenticateAtoken, createReview);
 
-router.get('/reviews', authenticateAtoken, getReviews)
+router.get('/reviews', getReviews)
 export default router
