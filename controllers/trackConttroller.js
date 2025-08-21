@@ -74,7 +74,7 @@ export const deleteTrack = async (req, res, next) => {
         await deleteTrackId(id);
         await increaseCourseTrack(-1);
 
-        await deleteFile(track[0]['image'], res);
+        await deleteFile(track[0]['image'], res,req);
 
         return standardResponse(res, 200, undefined, ' Delete Successfull')
     }

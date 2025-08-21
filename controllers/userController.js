@@ -142,7 +142,7 @@ export const deleteUser = async (req, res, next) => {
 
     console.log(user)
 
-    await deleteFile(user[0]['image'])
+    await deleteFile(user[0]['image'],res,req)
 
     if (user[0]['role'] == 'admin') {
         await increaseAdmins(-1);

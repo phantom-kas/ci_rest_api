@@ -75,7 +75,7 @@ export const generateCode = () => {
 
 
 
-export const deleteFile = async (fileName, res) => {
+export const deleteFile = async (fileName, res,req=null) => {
   if (!fileName) {
     return null
   }
@@ -83,6 +83,7 @@ export const deleteFile = async (fileName, res) => {
     return null
   }
   if (process.env.NODE_ENV !== 'production') {
+  // if(false){
     const __dirname = path.dirname(fileURLToPath(import.meta.url))
     // if(!/^[\w\-.]+$/.test(fileName)){
     //     return standardResponse(res, 500, undefined, 'Failed', undefined);
@@ -93,17 +94,20 @@ export const deleteFile = async (fileName, res) => {
       if (err) {
         console.error('Error deleting image ***************////////-:', err);
         return standardResponse(res, 500, undefined, 'Failed to delete image', undefined);
+        // throw new Error(`Cloudinary deletion failed: ${err.message || err}`)
       }
       return true
     });
   }
   else {
     try {
-      const result = await cloudinary.uploader.destroy(req.params.publicId);
-      res.json(result);
+      const result = await cloudinary.uploader.destroy(extractPublicId(fileName));
+      // res.json(result);
+      return result
     } catch (err) {
       console.error('Cloudinary delete error:', err);
-      return standardResponse(res, 500, undefined, 'Failed to delete image', undefined);
+      // return Error(`Cloudinary deletion failed: ${err.message || err}`);
+        return standardResponse(res, 500, undefined, 'Failed to delete image', undefined);
     }
   }
 }
@@ -141,7 +145,7 @@ export const handleUpload = async (req, options = {}) => {
   }
 
   if (process.env.NODE_ENV === 'production') {
-    // Upload to Cloudinary
+  // if(true){    // Upload to Cloudinary
     const base64 = file.buffer.toString('base64');
     const fileStr = `data:${file.mimetype};base64,${base64}`;
 
@@ -189,7 +193,7 @@ export const editImageUtil = async (req, res, next, tabel) => {
   try {
     const id = req.params.id
     const item = await getItemService(tabel, ' image ', '  id = ? limit 1 ', [id])
-    await deleteFile(item[0]['image'], res);
+    await deleteFile(item[0]['image'], res,req);
     const fileUrl = await handleUpload(req);
     await editImageInDbService(fileUrl, id, tabel)
     return standardResponse(res, 200, { url: fileUrl }, ' Update Successfull')
@@ -214,6 +218,24 @@ export const decrypt = (encrypted, ivHex) => {
   decrypted += decipher.final('utf8');
   return decrypted;
 };
+
+function extractPublicId(cloudinaryUrl) {
+  try {
+    // Example: https://res.cloudinary.com/.../upload/v1234567890/uploads/my_photo.jpg
+    const parts = cloudinaryUrl.split("/");
+
+    // Remove version (v1234567890)
+    const versionAndFile = parts.slice(parts.indexOf("upload") + 1).join("/");
+
+    // Remove file extension (.jpg, .png, etc.)
+    const publicId = versionAndFile.replace(/\.[^/.]+$/, "");
+
+    return publicId; // e.g. "uploads/my_photo"
+  } catch (err) {
+    console.error("Invalid Cloudinary URL:", err);
+    return null;
+  }
+}
 
 export const encrypt = (text) => {
   const iv = crypto.randomBytes(16); // unique per encryption

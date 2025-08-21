@@ -60,7 +60,7 @@ export const deleteCourse = async (req, res, next) => {
         if (!await deleteCourseByIdService(id)) {
             return standardResponse(res, 400, undefined, 'UNkown error. \n Please try again later');
         }
-        await deleteFile(course[0]['image'], res);
+        await deleteFile(course[0]['image'], res,req);
         await increaseCourseCountService(course[0]['track'], -1)
         return standardResponse(res, 200, undefined, ' Delete Successfull')
     }
