@@ -51,7 +51,7 @@ export const getTracks = async (req, res, next) => {
     if (req.query.orderbyratds) {
         order = ' t.rating DESC ,';
     }
-    const tracks = await getPaginationService(`SELECT t.id, t.name ,t.price,description,t.image,t.duration,t.num_courses,t.Instructor ,
+    const tracks = await getPaginationService(`SELECT t.id,t.total_ratings,t.num_rating, t.name ,t.price,description,t.image,t.duration,t.num_courses,t.Instructor ,
          (SELECT GROUP_CONCAT(c.title)
     FROM courses  as c
     WHERE c.track = t.id
