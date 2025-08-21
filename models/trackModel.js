@@ -18,7 +18,7 @@ export const createTrack = async (req, title, description, duration, price, file
 
 export const increaseMonthlyTrackCount = async (num) => {
     const month = getMonth()
-    const [result] = await db.query("UPDATE monthly_state set tracks_count = tracks_count + ? where month = ?", [num,month],)
+    const [result] = await db.query("UPDATE monthly_state set tracks_count = tracks_count + ? where month = ?", [num, month],)
     if (result.affectedRows < 1) {
         await db.query("INSERT INTO monthly_state  (tracks_count,month)  values(?,?)", [num, month])
     }
@@ -38,8 +38,8 @@ export const checkTrackExists = async (object) => {
 }
 
 
-export const getTracksDb = async (cols = '*' , where = ' 1',queryParams=[]) => {
-    const [rows] = await db.query(`SELECT ${cols} from track where ${where} `,queryParams);
+export const getTracksDb = async (cols = '*', where = ' 1', queryParams = []) => {
+    const [rows] = await db.query(`SELECT ${cols} from track where ${where} `, queryParams);
     return rows;
 }
 
@@ -51,20 +51,25 @@ export const deleteTrackId = async (trackId) => {
     return true;
 }
 
-export const updateTrackDb = async (description, price, duration, instructor, title,id)=>{
-    const [result] = await db.query("UPDATE track set price = ?,name = ?,duration = ?,description = ?,Instructor=? where id = ? limit 1", [price,title,duration,description,instructor, id],)
+export const updateTrackDb = async (description, price, duration, instructor, title, id) => {
+    const [result] = await db.query("UPDATE track set price = ?,name = ?,duration = ?,description = ?,Instructor=? where id = ? limit 1", [price, title, duration, description, instructor, id],)
     if (result.affectedRows < 1) {
-      return false
+        return false
     }
     return true
 }
 
-export const getTrackCourses =async (id) => {
-    const [rows] = await db.query(`SELECT title,image,id from courses where track = ? `,[id]);
+export const getTrackCourses = async (id) => {
+    const [rows] = await db.query(`SELECT title,image,id from courses where track = ? `, [id]);
     return rows;
 }
 
 
-export const updateV = async (id)=>{
- await db.query("UPDATE track set __v = __v + 1 where id = ?",[id])
+export const updateV = async (id) => {
+    await db.query("UPDATE track set __v = __v + 1 where id = ?", [id])
+}
+
+
+export const updateTrackIncome = async (amount, track) => {
+    await db.query("UPDATE track set income = income + ? where id = ?", [amount, track])
 }

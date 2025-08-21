@@ -14,11 +14,34 @@ import learnerRouter from './routes/learnerRoutes.js'
 import invoiceRouter from './routes/invoiceRoutes.js'
 import reviewRouter from './routes/reviewRoutes.js'
 import dasBoardRouter from './routes/dashBorad.js';
+import cookieParser from "cookie-parser";
+import googleRouter from "./routes/googleRoutes.js"
+import session from "express-session";
+import passport from 'passport';
 dotenv.config();
 let users = [1]
 const app = express();
-app.use(cors());
+app.use(
+  cors({
+    origin: true,        // allow all origins dynamically
+    credentials: true,   // allow cookies to be sent
+  })
+);
 app.use(express.json());
+app.use(cookieParser());
+app.use(passport.initialize());
+// app.use(
+//   session({
+//     secret: process.env.SESSION_SECRET || "supersecret",
+//     resave: false,
+//     saveUninitialized: false,
+//     cookie: {
+//       httpOnly: true,
+//       secure: process.env.NODE_ENV === "production",
+//       sameSite: "lax",
+//     },
+//   })
+// );
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 app.use('/uploads',express.static(path.join(__dirname,'uploads')))
 app.use('/api', userRouter)
@@ -29,6 +52,7 @@ app.use('/api', learnerRouter)
 app.use('/api', invoiceRouter)
 app.use('/api', reviewRouter)
 app.use('/api', dasBoardRouter)
+app.use('/api', googleRouter)
 app.get('/test', async (req, res) => {
     const [rows] = await db.query("SELECT * from users");
     standardResponse(res, 200,rows,'success')

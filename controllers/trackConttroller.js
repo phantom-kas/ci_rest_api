@@ -1,3 +1,4 @@
+import db from "../db.js";
 import { getTrackService } from "../models/learnerModel.js";
 import { checkTrackExists, createTrack, deleteTrackId, getTrackCourses, getTracksDb, increaseCourseTrack, updateTrackDb, updateV } from "../models/trackModel.js";
 import { deleteFile, getPaginationService, handleUpload, standardResponse } from "../utils/utils.js";
@@ -39,7 +40,7 @@ export const getTracks = async (req, res, next) => {
     let order = '';
 
     let where = '';
-        let params = []
+    let params = []
 
     if (req.query.search != undefined) {
         where += ' and (t.name like ?  || t.Instructor like ?)';
@@ -56,7 +57,7 @@ export const getTracks = async (req, res, next) => {
     WHERE c.track = t.id
     LIMIT 2) AS courses
    from track as t
-        `, 't.id', limit, lastId, where, params,order);
+        `, 't.id', limit, lastId, where, params, order);
     standardResponse(res, 200, tracks)
     return
 }
@@ -134,6 +135,30 @@ export const getTrackAndCourses = async (req, res, next) => {
 export const getTrackLearners = async (req, res, next) => {
     const lastId = parseInt(req.query.lastId) || null;
     let limit = parseInt(req.query.limit) || 10;
-    const trackLearners = await getPaginationService(`SELECT ut.created_at, ut.id, u.id as user_id, u.image,u.firstname,u.lastName,ut.status,ut.amount from user_track as ut inner join users as u on u.id = ut.user`, 'ut.id', limit, lastId, '', '');
+    const id = req.params.id
+    const trackLearners = await getPaginationService(`SELECT ut.created_at, ut.id, u.id as user_id, u.image,u.firstname,u.lastName,ut.status,ut.amount from user_track as ut inner join users as u on u.id = ut.user `, 'ut.id', limit, lastId, ' && ut.track = ? ', [id]);
     standardResponse(res, 200, trackLearners)
 }
+
+
+export const getLearnerTracks = async (req, res, next) => {
+    try {
+        const userid = req.user.id
+        const [tracks] = await db.query("SELECT t.id,t.name from track as t inner join user_track as ut on ut.track = t.id  where ut.user=?", [userid])
+
+
+        return standardResponse(res, 200, tracks)
+    } catch (err) {
+        next(err)
+    }
+}
+
+
+
+export const getTracksChat = async (req, res, next) => {
+    const [tracks] = await db.query("SELECT num_enroled,income,name from track")
+
+
+    return standardResponse(res, 200, tracks)
+}
+

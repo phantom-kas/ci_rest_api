@@ -255,3 +255,26 @@ export const getExchangeRate = async (to, from = 'USD') => {
   }
 }
 
+
+
+export const setRtokenCookie = (res,refreshtoken) => {
+  res.clearCookie("refresh_token", { path: "/api/generate_new_access_token" });
+  res.cookie("refresh_token", refreshtoken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    // path: "/api/generate_new_access_token",  // 👈 only send to this path!
+    path:'/api/generate_new_access_token',
+    maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+  });
+
+    res.cookie("refresh_token", refreshtoken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    // path: "/api/generate_new_access_token",  // 👈 only send to this path!
+    path:'/api/logout',
+    maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+  });
+  
+}

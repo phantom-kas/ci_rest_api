@@ -1,6 +1,6 @@
 
 import express from 'express';
-import { getAllUsers, createAdmin, createLearner, updateUser, getUser, deleteUser, getAllUser2 } from '../controllers/userController.js';
+import { getAllUsers, createAdmin, createLearner, updateUser, getUser, deleteUser, getAllUser2, getCounts } from '../controllers/userController.js';
 import { validateUserRequest, userSchema, updateUserInfoSchema, } from '../middleware/userInputValidator.js';
 import { adminProtected, authenticateAtoken } from '../middleware/auth.js';
 import { createUploadMiddleware, ensureFilePresent } from '../config/multer.js';
@@ -14,7 +14,8 @@ const upload = createUploadMiddleware(allowedMimeTypes);
 router.get('/users',authenticateAtoken,adminProtected, getAllUsers)
 router.get('/users/options',authenticateAtoken,adminProtected, getAllUser2)
 
-router.get('/user/:id', getUser)
+router.get('/user/:id',authenticateAtoken, getUser)
+router.get('/counts', getCounts)
 router.post('/user/admin', (req, res, next) => validateUserRequest(req, res, next, userSchema), upload.single('file'),ensureFilePresent,createAdmin)
 router.post('/user/learner', (req, res, next) => validateUserRequest(req, res, next, userSchema), upload.single('file'),ensureFilePresent,createLearner)
 router.put('/user/:id',authenticateAtoken, (req, res, next) => validateUserRequest(req, res, next, updateUserInfoSchema), updateUser)

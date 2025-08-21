@@ -7,8 +7,8 @@ import { authenticateAtoken } from '../middleware/auth.js';
 
 const router = express.Router()
 
-router.post('/generate_new_access_token', (req, res, next) => validateUserRequest(req, res, next, generateRtokenSchema), generateAtoken)
-router.post('/logout', (req, res, next) => validateUserRequest(req, res, next, generateRtokenSchema), logOut)
+router.post('/generate_new_access_token', generateAtoken)
+router.post('/logout', logOut)
 router.post('/login', (req, res, next) => validateUserRequest(req, res, next, loginSchema), login)
 router.get('/check_token',authenticateAtoken, checkToken)
 router.get('/send_verify_email',authenticateAtoken, verifyEmail)

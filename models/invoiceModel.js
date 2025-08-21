@@ -30,9 +30,17 @@ export const getInvoiceService = async (where = ' 1', cols = 'id', params = []) 
 
 
 export const addUserTrack = async (userId, trackId, amount) => {
-    const [result] = await db.query("INSERT INTO user_track (user, track, amount,created_at) VALUES (?,?,?,?)", [userId, trackId, amount,getDateTime()]);
+    const [result] = await db.query("INSERT INTO user_track (user, track, amount,created_at) VALUES (?,?,?,?)", [userId, trackId, amount, getDateTime()]);
     return result.insertId;
+
 }
+
+
+export const increaseTrackLearners = async (track, num) => {
+    const [result] = await db.query("UPDATE track set num_enroled = num_enroled + ? where id = ?", [num, track])
+    console.log(" enroled update == ",result.affectedRows)
+}
+
 
 export const userTrackPayment = async (amount, user, track) => {
 

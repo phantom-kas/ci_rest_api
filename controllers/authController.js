@@ -1,5 +1,5 @@
 import { deleteRefreshToken, storeRefereshTOken, getRtoken, getUserLoginDetails, getUserForToken, storeVerificationCode, getUserToken, setUserToEmailVerified, updateUserPassword, updateLastLogin, getRtokenByerssionID, revokeRtokens, getUSerPassword, updaePassword } from "../models/authModel.js";
-import { compareTokens, generateCode, standardResponse } from "../utils/utils.js"
+import { compareTokens, generateCode, setRtokenCookie, standardResponse } from "../utils/utils.js"
 import bcrypt from 'bcrypt'
 import dotenv from 'dotenv';
 dotenv.config();
@@ -20,9 +20,13 @@ export const createRefereshToken = async (userInfo, ancestor = null) => {
 }
 
 export const generateAtoken = async (req, res, next) => {
-    const { refreshToken } = req.body
+    // const { refreshToken } = req.body
+
+    console.log(req.cookies)
+    const refreshToken = req.cookies.refresh_token; 
+
     if (!refreshToken) {
-        return standardResponse(res, 401, undefined, 'Access denied');
+        return standardResponse(res, 401, undefined, 'Token not found');
     }
 
     let decoded
@@ -62,7 +66,7 @@ export const generateAtoken = async (req, res, next) => {
     const { refreshtoken, tokenId } = await createRefereshToken(userInfo, ancestor)
     const accessToken = createAccessToken(userInfo, tokenId)
 
-
+    setRtokenCookie(res, refreshtoken)
     standardResponse(res, 200, { accessToken, refreshToken: refreshtoken })
 
 }
@@ -83,11 +87,11 @@ export const login = async (req, res, next) => {
 
     console.log(user);
     if (!user) {
-        standardResponse(res, 401, undefined, 'Invalid credentials');
+        standardResponse(res, 403, undefined, 'Invalid credentials');
         return
     }
-    if (!await bcrypt.compare(password, user.password)) {
-        return standardResponse(res, 401, undefined, 'Invalid credentials');
+    if (!user.password || !await bcrypt.compare(password, user.password)) {
+        return standardResponse(res, 403, undefined, 'Invalid credentials');
     }
     if (!await updateLastLogin(user.id)) {
         return standardResponse(res, 500, undefined, 'Something went wrong');
@@ -97,7 +101,7 @@ export const login = async (req, res, next) => {
     //  console.log(userInfo)
     console.log('userid' + user.id)
     if (!userInfo) {
-        standardResponse(res, 401, undefined, 'Invalid credentials');
+        standardResponse(res, 403, undefined, 'Invalid credentials');
         return
     }
     console.log(userInfo)
@@ -106,6 +110,7 @@ export const login = async (req, res, next) => {
     const accessToken = createAccessToken(payload, tokenId)
     userInfo.refreshToken = refreshtoken
     userInfo.accessToken = accessToken
+    setRtokenCookie(res, refreshtoken)
     standardResponse(res, 200, userInfo, 'Login success', { accessToken, refreshtoken })
     return
 
@@ -230,7 +235,7 @@ export const validateAndResetPassword = async (req, res, next) => {
 
 
 export const logOut = async (req, res, next) => {
-    const { refreshToken } = req.body
+    const { refreshToken } = req.cookies.refresh_token
     if (!refreshToken) {
         return standardResponse(res, 401, undefined, 'Access denied');
     }

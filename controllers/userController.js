@@ -154,3 +154,11 @@ export const deleteUser = async (req, res, next) => {
 
 }
 
+
+
+export const getCounts =  async (req, res, next) => {
+    const [counts] =await db.query("SELECT learners_count,tracks_count from app_state LIMIT 1")
+
+    // console.log(counts)
+    return standardResponse(res, 200, counts[0], 'Delete success')
+}

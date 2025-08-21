@@ -1,8 +1,8 @@
-import { getTracksDb } from "../models/trackModel.js";
+import { getTracksDb, updateTrackIncome } from "../models/trackModel.js";
 import { getDateTime, getExchangeRate, getPaginationService, standardResponse } from "../utils/utils.js";
-import { addInvoiceService, addUserTrack, getInvoiceService, getUserTrack, increaseInvoiceCount, updateInvoicePayment, updateUserTrackAmount } from "../models/invoiceModel.js";
+import { addInvoiceService, addUserTrack, getInvoiceService, getUserTrack, increaseInvoiceCount, increaseTrackLearners, updateInvoicePayment, updateUserTrackAmount } from "../models/invoiceModel.js";
 import { initPackage, verifyPayment } from "../utils/paystackUtls.js";
-import { getUserService } from "../models/userModel.js";
+import { getUserService, increaseLearners } from "../models/userModel.js";
 import { getPaymentService, updatePayment, updateTotalIncome } from "../models/paymentModel.js";
 import db from "../db.js";
 import { generateStripeSesstion, removeProcessingFee, verifyStripePayment } from "../utils/stripeUtils.js";
@@ -33,8 +33,8 @@ export const createTrackInvoice = async (req, res, next) => {
     }
     if (req.body.price) {
         price = req.body.price;
-        console.log('Price = ',price)
-        console.log('Topay = ',trackData[0].price)
+        console.log('Price = ', price)
+        console.log('Topay = ', trackData[0].price)
         if (price > trackData[0].price) {
             return standardResponse(res, 400, undefined, 'Price cannot be greater than the track price');
         }
@@ -47,6 +47,7 @@ export const createTrackInvoice = async (req, res, next) => {
         }
     } else {
         await addUserTrack(userId, trackId, 0);
+        await increaseTrackLearners(trackId,1)
     }
     const invoice = {
         userId,
@@ -95,7 +96,7 @@ export const payInvoiceStripe = async (req, res, next) => {
 export const processPaystackPayment = async (req, res, next) => {
     const reference = req.params.reference
 
-    const payment = await getPaymentService(' reference = ?', ' id , inovice,status  ,channel ', [reference]);
+    const payment = await getPaymentService(' reference = ?', ' id , inovice,status,amount ,channel ', [reference]);
 
     if (payment.length < 1) {
         return standardResponse(res, 400, undefined, 'Payment not found')
@@ -123,7 +124,10 @@ export const processPaystackPayment = async (req, res, next) => {
     } else if (payment[0]['channel'] == 'stripe') {
         channel = 'stripe'
         paymentdata = await verifyStripePayment(res, reference, next)
-        amount = removeProcessingFee(paymentdata.amount_total)
+        if (paymentdata.amount_total < payment[0]['amount']) {
+            return standardResponse(res, 200, undefined, ' payment error')
+        }
+        amount = payment[0]['amount']
         rate = 1
     }
 
@@ -146,6 +150,7 @@ export const processPaystackPayment = async (req, res, next) => {
     await updateInvoicePayment(status, amount, getDateTime(), invoiceData[0]['id'])
     await updateUserTrackAmount(status, amount, invoiceData[0]['user'], invoiceData[0]['track'])
     await updateTotalIncome(amount)
+    await updateTrackIncome(amount,invoiceData[0]['track'])
     return standardResponse(res, 200, undefined, 'Proceeing complete')
 }
 
