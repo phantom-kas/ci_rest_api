@@ -285,16 +285,17 @@ export const setRtokenCookie = (res,refreshtoken) => {
   res.cookie("refresh_token", refreshtoken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
+    sameSite: "none",
     // path: "/api/generate_new_access_token",  // 👈 only send to this path!
     path:'/api/generate_new_access_token',
+    sameSite: "none",
     maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
   });
 
     res.cookie("refresh_token", refreshtoken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
+    sameSite: "none",
     // path: "/api/generate_new_access_token",  // 👈 only send to this path!
     path:'/api/logout',
     maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
