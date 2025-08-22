@@ -23,6 +23,7 @@ export const createRefereshToken = async (userInfo, ancestor = null) => {
 export const generateAtoken = async (req, res, next) => {
     // const { refreshToken } = req.body
 
+    console.log("-----------------rtk----------------------------------")
     console.log(req.cookies)
     const refreshToken = req.cookies.refresh_token; 
 
