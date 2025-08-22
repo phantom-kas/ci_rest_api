@@ -27,6 +27,24 @@ export const increaseAdmins = async (num = 1) => {
 }
 
 
+export const createAdmin = async (
+    firstName, lastName, email,
+    password
+    , phone) => {
+    const sql = "INSERT INTO users (firstname,lastName,email,password,role,isVerified,createdAt,__v,phone) VALUES (?,?,?,?,?,?,?,?,?)";
+    let salt = await bcrypt.genSalt(10);
+    const pwd = await bcrypt.hash(password, salt);
+
+    const [result] = await db.query(sql, [
+        firstName, lastName, email, pwd, 'admin', 0, getDateTime(), 0, phone])
+    if (result.affectedRows < 1) {
+        return false
+    }
+    await increaseAdmins()
+    return result.insertId
+}
+
+
 export const createUser = async (
     firstName, lastName, email,
     password

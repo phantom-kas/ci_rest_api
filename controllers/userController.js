@@ -1,5 +1,5 @@
 import db from "../db.js";
-import { checkUserExists, createUser, deleteUserService, getUserService, increaseAdmins, increaseLearners, updateUserImage, updateUserInfo } from "../models/userModel.js"
+import { checkUserExists, createAdmin, createUser, deleteUserService, getUserService, increaseAdmins, increaseLearners, updateUserImage, updateUserInfo } from "../models/userModel.js"
 import { deleteFile, getPaginationService, handleUpload, standardResponse } from "../utils/utils.js";
 import { verifyEmail } from "./authController.js";
 
@@ -47,9 +47,9 @@ export const getAllUser2 = async (req, res, next) => {
 
 
 
-export const createAdmin = async (req, res, next) => {
-    const { firstName, lastName, email, password, phone, location, gender, description, disability } = req.body
-    let created_by = null
+export const registerAdmin = async (req, res, next) => {
+    const { firstName, lastName, email, password } = req.body
+    
     if (req.user != undefined) {
         created_by = req.user.id
     }
@@ -57,13 +57,11 @@ export const createAdmin = async (req, res, next) => {
         if (await checkUserExists({ email })) {
             return standardResponse(res, 400, undefined, 'Email taken.\nPlease choose another one');
         }
-        const user = await createUser(firstName, lastName, email, password, 'admin', created_by, phone, location, gender, description, disability);
+        const user = await createAdmin(firstName, lastName, email, password);
         if (user) {
-            const fileUrl = await handleUpload(req);
-            await updateUserImage(user, fileUrl);
+            return verifyEmail(req, res, next, { id: user, email })
         }
         // standardResponse(res, 200, { id: user }, 'User created successfully.')
-        return verifyEmail(req, res, next, { id: user, email })
     }
     catch (err) {
         next(err)

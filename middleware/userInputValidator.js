@@ -11,6 +11,13 @@ export const userSchema = Joi.object({
     location: Joi.optional(),
     description: Joi.optional(),
 })
+export const adminSchema = Joi.object({
+    email: Joi.string().email().required(),
+    password: Joi.string().min(6).required(),
+    firstName: Joi.string().required(),
+    lastName: Joi.string().required(),
+    phone: Joi.string(),
+})
 
 
 export const createInvoiceSchema = Joi.object({

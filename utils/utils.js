@@ -281,6 +281,7 @@ export const getExchangeRate = async (to, from = 'USD') => {
 
 export const setRtokenCookie = (res,refreshtoken) => {
   res.clearCookie("refresh_token", { path: "/api/generate_new_access_token" });
+  res.clearCookie("refresh_token", { path: "/api/logout" });
   res.cookie("refresh_token", refreshtoken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",

@@ -10,6 +10,7 @@ import { getUserIDByEmail, getUserService } from "../models/userModel.js";
 import { v4 as uuidv4 } from 'uuid';
 export const createAccessToken = (user, rtkn) => {
     return jwt.sign({ ...user, rtkn }, process.env.ATOKEN_SECRET, { expiresIn: 60 * 60 * 3 })
+    // return jwt.sign({ ...user, rtkn }, process.env.ATOKEN_SECRET, { expiresIn: 10 })
 }
 
 export const createRefereshToken = async (userInfo, ancestor = null) => {
@@ -235,7 +236,7 @@ export const validateAndResetPassword = async (req, res, next) => {
 
 
 export const logOut = async (req, res, next) => {
-    const { refreshToken } = req.cookies.refresh_token
+    const  refreshToken  = req.cookies.refresh_token
     if (!refreshToken) {
         return standardResponse(res, 401, undefined, 'Access denied');
     }
