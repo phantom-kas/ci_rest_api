@@ -35,7 +35,12 @@ export const createTrackInvoice = async (req, res, next) => {
         price = req.body.price;
         console.log('Price = ', price)
         console.log('Topay = ', trackData[0].price)
+        trackData[0].price = parseInt(trackData[0].price)
+        price = parseInt(price)
         if (price > trackData[0].price) {
+
+            console.log(trackData[0].price)
+            console.log(price)
             return standardResponse(res, 400, undefined, 'Price cannot be greater than the track price');
         }
     }

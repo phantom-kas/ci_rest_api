@@ -284,7 +284,7 @@ export const setRtokenCookie = (res,refreshtoken) => {
   res.clearCookie("refresh_token", { path: "/api/logout" });
   res.cookie("refresh_token", refreshtoken, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: true, //process.env.NODE_ENV === "production",
     sameSite: "none",
     // path: "/api/generate_new_access_token",  // 👈 only send to this path!
     path:'/api/generate_new_access_token',
@@ -294,7 +294,7 @@ export const setRtokenCookie = (res,refreshtoken) => {
 
     res.cookie("refresh_token", refreshtoken, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: true, //process.env.NODE_ENV === "production",
     sameSite: "none",
     // path: "/api/generate_new_access_token",  // 👈 only send to this path!
     path:'/api/logout',
