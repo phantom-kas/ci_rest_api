@@ -121,7 +121,7 @@ export const increaseMonthlyLearnerCount = async (num = 1) => {
     const month = getMonth()
     const [result] = await db.query("UPDATE monthly_state set learners_count = learners_count + ? where month = ? limit 1", [num, month],)
     if (result.affectedRows < 1) {
-        await db.query("INSERT INTO monthly_state  (learners_count,month)  values(?,?) limit 1", [num, month])
+        await db.query("INSERT INTO monthly_state  (learners_count,month)  values(?,?)", [num, month])
     }
 }
 
@@ -129,6 +129,6 @@ export const increaseMonthlyAdminCount = async (num = 1) => {
     const month = getMonth()
     const [result] = await db.query("UPDATE monthly_state set admins_count = admins_count + ? where month = ? limit 1", [num, month],)
     if (result.affectedRows < 1) {
-        await db.query("INSERT INTO monthly_state  (admins_count,month)  values(?,?) limit 1", [num, month])
+        await db.query("INSERT INTO monthly_state  (admins_count,month)  values(?,?)", [num, month])
     }
 }

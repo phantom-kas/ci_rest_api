@@ -33,7 +33,7 @@ export const storeRefereshTOken = async (rtoken, user_id, ancestor = null,uuid=n
     const hashedTkn =await hashToken(rtoken)
     console.log(hashedTkn)
     console.log('=========================================')
-    const [result] = await db.query("INSERT INTO rtokens (user_id,token,created_at,ancestor,session_id) values (?,?,?,?,?) limit 1", [user_id, hashedTkn, getDateTime(), ancestor,uuid])
+    const [result] = await db.query("INSERT INTO rtokens (user_id,token,created_at,ancestor,session_id) values (?,?,?,?,?)", [user_id, hashedTkn, getDateTime(), ancestor,uuid])
     return result.insertId
 }
 
