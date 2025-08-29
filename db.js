@@ -1,27 +1,28 @@
-import mysql from 'mysql2/promise';
-import dotenv from 'dotenv';
+import mysql from "mysql2/promise";
+import dotenv from "dotenv";
+import fs from "fs";   // <-- missing import
+
 dotenv.config();
 
-let db
+let db;
 try {
-    db = mysql.createPool({
-        host: process.env.DB_HOST,
-        user: process.env.DB_USER,
-        password: process.env.DB_PASSWORD,
-        database: process.env.DB_NAME,
-        port: process.env.DB_PORT,
-        waitForConnections: true,
-        connectionLimit: 10,
-        queueLimit: 0,
-        ssl: {
-            rejectUnauthorized: true, // Enforces SSL with cert validation,
-            ca: fs.readFileSync('/path/to/skysql-ca.pem')
-        }
-    });
+  db = mysql.createPool({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    port: process.env.DB_PORT || 4181,
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0,
+    ssl: {
+      ca: fs.readFileSync("./DigiCertGlobalRootG2.crt.pem", "utf8"), // use correct path
+      rejectUnauthorized: true,
+    },
+  });
 } catch (err) {
-    console.log("MySQL connection fail:" + err.message);
-    process.exit();
+  console.log("MySQL connection fail: " + err.message);
+  process.exit(1);
 }
 
-export default db
-
+export default db;
