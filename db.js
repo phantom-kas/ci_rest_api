@@ -10,6 +10,9 @@ try {
         password: process.env.DB_PASSWORD,
         database: process.env.DB_NAME,
         port: process.env.DB_PORT,
+        waitForConnections: true,
+        connectionLimit: 10,
+        queueLimit: 0,
         ssl: {
             rejectUnauthorized: true, // Enforces SSL with cert validation,
             ca: fs.readFileSync('/path/to/skysql-ca.pem')
