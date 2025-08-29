@@ -6,6 +6,7 @@ import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 
 // import GoogleStrategy from "passport-google-oidc";
 import db from "../db.js";
+import { increaseLearners } from "../models/userModel.js";
 const router = express.Router();
 passport.use(
     new GoogleStrategy(
