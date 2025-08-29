@@ -16,10 +16,29 @@ try {
         enableKeepAlive: true,
         keepAliveInitialDelay: 10000,
     });
+
+     const rawQuery = db.query.bind(db);
+  db.query = async (sql, params, retries = 2) => {
+    for (let attempt = 0; attempt <= retries; attempt++) {
+      try {
+        return await rawQuery(sql, params);
+      } catch (err) {
+        if (err.errno === 1927 && attempt < retries) {
+          console.warn("⚠️ MaxScale killed connection. Retrying...");
+          continue;
+        }
+        throw err;
+      }
+    }
+  };
+
 } catch (err) {
     console.log("MySQL connection fail:" + err.message);
     process.exit();
 }
+
+
+
 
 export default db
 
