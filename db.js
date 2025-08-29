@@ -17,20 +17,34 @@ try {
         keepAliveInitialDelay: 10000,
     });
 
-     const rawQuery = db.query.bind(db);
-  db.query = async (sql, params, retries = 2) => {
-    for (let attempt = 0; attempt <= retries; attempt++) {
-      try {
-        return await rawQuery(sql, params);
-      } catch (err) {
-        if (err.errno === 1927 && attempt < retries) {
-          console.warn("⚠️ MaxScale killed connection. Retrying...");
-          continue;
+    const rawQuery = db.query.bind(db);
+    db.query = async (sql, params, retries = 2) => {
+        for (let attempt = 0; attempt <= retries; attempt++) {
+            try {
+                return await rawQuery(sql, params);
+            } catch (err) {
+                const retryable =
+                    (err.errno === 1927) || // MaxScale killed connection
+                    (err.code === 'PROTOCOL_CONNECTION_LOST'); // dropped connection
+
+                if (retryable && attempt < retries) {
+                    console.warn(`⚠️ Lost DB connection (${err.code || err.errno}). Retrying...`);
+                    continue;
+                }
+                throw err;
+            }
         }
-        throw err;
-      }
-    }
-  };
+    };
+
+    // ✅ Optional heartbeat every 60s to keep connection alive
+    setInterval(async () => {
+        try {
+            await rawQuery('SELECT 1');
+        } catch (e) {
+            console.warn("⚠️ Heartbeat failed:", e.message);
+        }
+    }, 60000);
+    ;
 
 } catch (err) {
     console.log("MySQL connection fail:" + err.message);
