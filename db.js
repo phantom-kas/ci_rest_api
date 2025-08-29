@@ -16,7 +16,7 @@ try {
     connectionLimit: 10,
     queueLimit: 0,
     ssl: {
-      ca: fs.readFileSync("./DigiCertGlobalRootG2.crt.pem", "utf8"), // use correct path
+    //   ca: fs.readFileSync("./DigiCertGlobalRootG2.crt.pem", "utf8"), // use correct path
       rejectUnauthorized: true,
     },
   });
