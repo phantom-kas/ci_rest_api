@@ -36,6 +36,7 @@ passport.use(
                         [fristName, lastName, email, null, 1, getDateTime(), image,'learner']
                     );
                     userId = result.insertId;
+                    await increaseLearners();
                 }
                 // Issue tokens
                 const payload = { email, fristName, lastName, role: 'learner', id: userId }
