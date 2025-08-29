@@ -12,7 +12,9 @@ try {
         port: process.env.DB_PORT,
         ssl: {
             rejectUnauthorized: true // Enforces SSL with cert validation
-        }
+        },
+        enableKeepAlive: true,
+        keepAliveInitialDelay: 10000,
     });
 } catch (err) {
     console.log("MySQL connection fail:" + err.message);
