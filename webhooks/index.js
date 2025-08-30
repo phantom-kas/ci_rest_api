@@ -24,7 +24,7 @@ router.post('/stripe', express.raw({ type: "application/json" }), async (req, re
         case "checkout.session.completed": {
             const session = event.data.object;
             console.log("💰 Checkout session completed:", session.id);
-            return await processPayment(session.id);
+            return await processPayment(session.id,res);
 
         }
         case "charge.succeeded": {

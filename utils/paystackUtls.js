@@ -40,7 +40,7 @@ export const initPackage = async (next, email, amount, metadata, invoice, user, 
 }
 
 
-export const verifyPayment = async (res,reference) => {
+export const verifyPayment = async (reference) => {
     const response = await axios.get(`https://api.paystack.co/transaction/verify/${reference}`, {
         headers: {
             Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`
