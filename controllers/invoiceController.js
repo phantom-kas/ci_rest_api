@@ -206,5 +206,5 @@ export const processPayment = async (reference,res,next) => {
     await updateUserTrackAmount(status, amount, invoiceData[0]['user'], invoiceData[0]['track'])
     await updateTotalIncome(amount)
     await updateTrackIncome(amount, invoiceData[0]['track'])
-    return standardResponse(res, 200, undefined, 'Proceeing complete')
+    return standardResponse(res, 200, undefined, 'Processing complete')
 }

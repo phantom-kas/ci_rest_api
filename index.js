@@ -28,7 +28,14 @@ app.use(
     credentials: true,   // allow cookies to be sent
   })
 );
-app.use(express.json());
+// app.use(express.json());
+app.use((req, res, next) => {
+  if (req.originalUrl === "/webhooks/stripe") {
+    next(); // skip json parsing for webhooks
+  } else {
+    express.json()(req, res, next);
+  }
+});
 app.use(cookieParser());
 app.use(passport.initialize());
 // app.use(
