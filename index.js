@@ -16,6 +16,7 @@ import reviewRouter from './routes/reviewRoutes.js'
 import dasBoardRouter from './routes/dashBorad.js';
 import cookieParser from "cookie-parser";
 import googleRouter from "./routes/googleRoutes.js"
+import webhooks from "./webhooks/index.js"
 import session from "express-session";
 import passport from 'passport';
 dotenv.config();
@@ -53,6 +54,7 @@ app.use('/api', invoiceRouter)
 app.use('/api', reviewRouter)
 app.use('/api', dasBoardRouter)
 app.use('/api', googleRouter)
+app.use('/webhooks', webhooks)
 app.get('/test', async (req, res) => {
     const [rows] = await db.query("SELECT * from users");
     standardResponse(res, 200,rows,'success')

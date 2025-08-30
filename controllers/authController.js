@@ -69,7 +69,7 @@ export const generateAtoken = async (req, res, next) => {
     const accessToken = createAccessToken(userInfo, tokenId)
 
     setRtokenCookie(res, refreshtoken)
-    standardResponse(res, 200, { accessToken, refreshToken: refreshtoken })
+    standardResponse(res, 200, { accessToken, refreshToken: null })
 
 }
 

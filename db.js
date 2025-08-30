@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import fs from "fs";   // <-- missing import
 
 dotenv.config();
+const isProd = process.env.NODE_ENV === "production";
 
 let db;
 try {
@@ -15,12 +16,10 @@ try {
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0,
-    ssl: {
-    //   ca: fs.readFileSync("./DigiCertGlobalRootG2.crt.pem", "utf8"), // use correct path
-      rejectUnauthorized: true,
-    },
+    ssl: isProd ? { rejectUnauthorized: true } : undefined
   });
 } catch (err) {
+  console.log("--------------db--------------------------------" );
   console.log("MySQL connection fail: " + err.message);
   process.exit(1);
 }

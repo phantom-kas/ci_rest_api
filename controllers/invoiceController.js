@@ -52,7 +52,7 @@ export const createTrackInvoice = async (req, res, next) => {
         }
     } else {
         await addUserTrack(userId, trackId, 0);
-        await increaseTrackLearners(trackId,1)
+        await increaseTrackLearners(trackId, 1)
     }
     const invoice = {
         userId,
@@ -100,63 +100,7 @@ export const payInvoiceStripe = async (req, res, next) => {
 
 export const processPaystackPayment = async (req, res, next) => {
     const reference = req.params.reference
-
-    const payment = await getPaymentService(' reference = ?', ' id , inovice,status,amount ,channel ', [reference]);
-
-    if (payment.length < 1) {
-        return standardResponse(res, 400, undefined, 'Payment not found')
-
-    }
-    if (payment[0]['status'] == 'paid') {
-        return standardResponse(res, 400, undefined, 'Payment already processed')
-    }
-
-    let rate = 1;
-    let paidSoFat = 0;
-    let channel = ''
-    let amount = 0
-    let paymentdata
-    if (payment[0]['channel'] == 'paystack') {
-        channel = 'paystack'
-        paymentdata = await verifyPayment(res, reference)
-        if (!paymentdata) {
-            return standardResponse(res, 500, undefined, 'Payment verification failed');
-        }
-        rate = await getExchangeRate('GHS', 'USD');
-        amount = Math.ceil(paymentdata.data.amount * (1 / rate))
-
-
-    } else if (payment[0]['channel'] == 'stripe') {
-        channel = 'stripe'
-        paymentdata = await verifyStripePayment(res, reference, next)
-        if (paymentdata.amount_total < payment[0]['amount']) {
-            return standardResponse(res, 200, undefined, ' payment error')
-        }
-        amount = payment[0]['amount']
-        rate = 1
-    }
-
-    const invoiceData = await getInvoiceService(' id = ?', 'id,amount,user,track,amount,paid', [payment[0]['inovice']]);
-    paidSoFat = parseFloat(invoiceData[0]['paid']) + parseFloat(amount)
-
-    console.log('paymentdata ', amount)
-    console.log('paid so far =', paidSoFat)
-    console.log('channel =', channel)
-    console.log('invoice amount =', invoiceData[0]['amount'])
-
-
-
-
-    let status = 'pending';
-    if (paidSoFat >= invoiceData[0]['amount']) {
-        status = 'paid'
-    }
-    await updatePayment(JSON.stringify(paymentdata), status, getDateTime(), payment[0]['id'])
-    await updateInvoicePayment(status, amount, getDateTime(), invoiceData[0]['id'])
-    await updateUserTrackAmount(status, amount, invoiceData[0]['user'], invoiceData[0]['track'])
-    await updateTotalIncome(amount)
-    await updateTrackIncome(amount,invoiceData[0]['track'])
-    return standardResponse(res, 200, undefined, 'Proceeing complete')
+    return await processPayment(reference)
 }
 
 
@@ -210,4 +154,57 @@ export const getInvoiceById = async (req, res, next) => {
     }
     return standardResponse(res, 200, data[0])
 
+}
+
+
+
+export const processPayment = async (reference) => {
+    const payment = await getPaymentService(' reference = ?', ' id , inovice,status,amount ,channel ', [reference]);
+    if (payment.length < 1) {
+        return standardResponse(res, 400, undefined, 'Payment not found')
+    }
+    if (payment[0]['status'] == 'paid') {
+        return standardResponse(res, 200, undefined, 'Payment already processed successfully.')
+    }
+    let rate = 1;
+    let paidSoFat = 0;
+    let channel = ''
+    let amount = 0
+    let paymentdata
+    if (payment[0]['channel'] == 'paystack') {
+        channel = 'paystack'
+        paymentdata = await verifyPayment(res, reference)
+        if (!paymentdata) {
+            return standardResponse(res, 500, undefined, 'Payment verification failed');
+        }
+        rate = await getExchangeRate('GHS', 'USD');
+        amount = Math.ceil(paymentdata.data.amount * (1 / rate))
+    } else if (payment[0]['channel'] == 'stripe') {
+        channel = 'stripe'
+        paymentdata = await verifyStripePayment(res, reference, next)
+        if (!paymentdata) {
+            return standardResponse(res, 500, undefined, 'An error ocured.')
+        }
+        if (paymentdata.amount_total < payment[0]['amount']) {
+            return standardResponse(res, 200, undefined, ' payment error')
+        }
+        amount = payment[0]['amount']
+        rate = 1
+    }
+    const invoiceData = await getInvoiceService(' id = ?', 'id,amount,user,track,amount,paid', [payment[0]['inovice']]);
+    paidSoFat = parseFloat(invoiceData[0]['paid']) + parseFloat(amount)
+    console.log('paymentdata ', amount)
+    console.log('paid so far =', paidSoFat)
+    console.log('channel =', channel)
+    console.log('invoice amount =', invoiceData[0]['amount'])
+    let status = 'pending';
+    if (paidSoFat >= invoiceData[0]['amount']) {
+        status = 'paid'
+    }
+    await updatePayment(JSON.stringify(paymentdata), status, getDateTime(), payment[0]['id'])
+    await updateInvoicePayment(status, amount, getDateTime(), invoiceData[0]['id'])
+    await updateUserTrackAmount(status, amount, invoiceData[0]['user'], invoiceData[0]['track'])
+    await updateTotalIncome(amount)
+    await updateTrackIncome(amount, invoiceData[0]['track'])
+    return standardResponse(res, 200, undefined, 'Proceeing complete')
 }
