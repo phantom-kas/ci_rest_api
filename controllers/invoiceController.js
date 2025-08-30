@@ -100,7 +100,7 @@ export const payInvoiceStripe = async (req, res, next) => {
 
 export const processPaystackPayment = async (req, res, next) => {
     const reference = req.params.reference
-    return await processPayment(reference,res)
+    return await processPayment(reference,res,next)
 }
 
 
@@ -158,7 +158,7 @@ export const getInvoiceById = async (req, res, next) => {
 
 
 
-export const processPayment = async (reference,res) => {
+export const processPayment = async (reference,res,next) => {
     const payment = await getPaymentService(' reference = ?', ' id , inovice,status,amount ,channel ', [reference]);
     if (payment.length < 1) {
         return standardResponse(res, 400, undefined, 'Payment not found')

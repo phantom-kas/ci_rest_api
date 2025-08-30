@@ -8,7 +8,7 @@ router.post('/paystack', (req, res, next) => {
 
 })
 
-router.post('/stripe', express.raw({ type: "application/json" }), async (req, res) => {
+router.post('/stripe', express.raw({ type: "application/json" }), async (req, res,next) => {
     const sig = req.headers["stripe-signature"];
     let event;
 
@@ -24,7 +24,7 @@ router.post('/stripe', express.raw({ type: "application/json" }), async (req, re
         case "checkout.session.completed": {
             const session = event.data.object;
             console.log("💰 Checkout session completed:", session.id);
-            return await processPayment(session.id,res);
+            return await processPayment(session.id,res,next);
 
         }
         case "charge.succeeded": {
