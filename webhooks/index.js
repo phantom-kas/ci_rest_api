@@ -21,17 +21,17 @@ router.post('/stripe', express.raw({ type: "application/json" }), async (req, re
 
     // Handle events
     switch (event.type) {
-        case "charge.succeeded": {
+        case "checkout.session.completed": {
             const session = event.data.object;
             console.log("💰 Checkout session completed:", session.id);
             return await processPayment(session.id,res,next);
 
         }
-        // case "charge.succeeded": {
-        //     break
+        case "charge.succeeded": {
+            break
 
 
-        // }
+        }
         default:
             console.log(`Unhandled event type: ${event.type}`);
             
