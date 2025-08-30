@@ -1,5 +1,8 @@
 import express from 'express';
 import { processPayment } from '../controllers/invoiceController.js';
+import Stripe from 'stripe';
+const stripe = Stripe(process.env.STRIPE_SK);
+
 const router = express.Router()
 router.post('/paystack', (req, res, next) => {
 
