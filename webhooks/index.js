@@ -19,7 +19,7 @@ router.post('/paystack', express.json({ type: "*/*" }), async (req, res, next) =
         return;
     }
     const targetUrl = BACKEND_SERVICES[backendKey];
-    switch (event.type) {
+    switch (event.event) {
         case "charge.success": {
             const ref = event.data.reference;
             await axios.get(targetUrl + '/' + ref, event, {
@@ -27,7 +27,7 @@ router.post('/paystack', express.json({ type: "*/*" }), async (req, res, next) =
             });
         }
         default:
-            console.log(`Unhandled event type: `, event.type);
+            console.log(`Unhandled event type: `, event.event);
     }
     standardResponse(res, 200)
 })
