@@ -11,7 +11,8 @@ router.post('/paystack', express.json({ type: "*/*" }), async (req, res, next) =
     console.log('--------------------paystack-webhook------------------------------------------')
     console.log("📩 Received Paystack event:", event.event);
     res.sendStatus(200);
-    const backendKey = event.data?.metadata?.backend;
+    console.log('backend service --' , backendKey);
+    const backendKey = event.data?.metadata?.service;
     if (!backendKey || !BACKEND_SERVICES[backendKey]) {
         console.warn("⚠️ No backend assigned for this transaction.");
         return;

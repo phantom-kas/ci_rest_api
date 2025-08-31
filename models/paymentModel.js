@@ -12,7 +12,7 @@ export const createPaymnet = async (amount, reference, status, invoice, iv, user
 
 
 export const updateTotalIncome = async (amount) => {
-    await db.query("UPDATE app_state set income = courses_count + ?", [amount],)
+    await db.query("UPDATE app_state set income = income + ? ", [amount],)
     await addMonthlyIncome(amount)
     return true
 }
