@@ -5,7 +5,7 @@ import { standardResponse } from '../utils/utils.js';
 import axios from 'axios';
 const stripe = Stripe(process.env.STRIPE_SK);
 const BACKEND_SERVICES = {
-    gclient_invoice: "https://https://gc-rest-api.onrender.com/api/service/process-paystack",
+    gclient_invoice: "https://gc-rest-api.onrender.com/api/service/process-paystack",
 };
 const router = express.Router()
 router.post('/paystack', express.json({ type: "*/*" }), async (req, res, next) => {
