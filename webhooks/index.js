@@ -1,6 +1,7 @@
 import express from 'express';
 import { processPayment } from '../controllers/invoiceController.js';
 import Stripe from 'stripe';
+import { standardResponse } from '../utils/utils.js';
 const stripe = Stripe(process.env.STRIPE_SK);
 const BACKEND_SERVICES = {
     gclient_invoice: "https://https://gc-rest-api.onrender.com/api/service/process-paystack",
@@ -10,9 +11,9 @@ router.post('/paystack', express.json({ type: "*/*" }), async (req, res, next) =
     const event = req.body;
     console.log('--------------------paystack-webhook------------------------------------------')
     console.log("📩 Received Paystack event:", event.event);
-    res.sendStatus(200);
-    console.log('backend service --' , backendKey);
+
     const backendKey = event.data?.metadata?.service;
+    console.log('backend service --', backendKey);
     if (!backendKey || !BACKEND_SERVICES[backendKey]) {
         console.warn("⚠️ No backend assigned for this transaction.");
         return;
@@ -21,14 +22,14 @@ router.post('/paystack', express.json({ type: "*/*" }), async (req, res, next) =
     switch (event.type) {
         case "charge.success": {
             const ref = event.data.reference;
-            return await axios.get(targetUrl + '/' + ref, event, {
+            await axios.get(targetUrl + '/' + ref, event, {
                 headers: { "Content-Type": "application/json" },
             });
         }
         default:
             console.log(`Unhandled event type: `, event.type);
     }
-
+    standardResponse(res, 200)
 })
 
 router.post('/stripe', express.raw({ type: "application/json" }), async (req, res, next) => {
