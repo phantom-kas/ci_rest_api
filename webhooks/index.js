@@ -3,7 +3,7 @@ import { processPayment } from '../controllers/invoiceController.js';
 import Stripe from 'stripe';
 const stripe = Stripe(process.env.STRIPE_SK);
 const BACKEND_SERVICES = {
-    gclient_invoice: "https://https://gc-rest-api.onrender.com/service/process-paystack",
+    gclient_invoice: "https://https://gc-rest-api.onrender.com/api/service/process-paystack",
 };
 const router = express.Router()
 router.post('/paystack', express.json({ type: "*/*" }), async (req, res, next) => {
