@@ -30,7 +30,7 @@ app.use(
 );
 // app.use(express.json());
 app.use((req, res, next) => {
-  if (req.originalUrl === "/webhooks/stripe") {
+  if (req.originalUrl === "/webhooks/stripe" || req.originalUrl === "/webhooks/paystack")  {
     next(); // skip json parsing for webhooks
   } else {
     express.json()(req, res, next);

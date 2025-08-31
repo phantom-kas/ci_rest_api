@@ -15,10 +15,13 @@ export const initPackage = async (next, email, amount, metadata, invoice, user, 
             'https://api.paystack.co/transaction/initialize',
             {
                 email,
-                amount:amt, 
+                amount: amt,
                 currency,
                 // callback_url: "http://localhost:3000/payment-success", // optional
                 //metadata: encryptedData
+                "metadata": {
+                    "service": "gclient_invoice"
+                }
             },
             {
                 headers: {
@@ -30,7 +33,7 @@ export const initPackage = async (next, email, amount, metadata, invoice, user, 
 
         // console.log(data.data)
         const reference = data.data.reference
-        await createPaymnet(amount, reference, 'incomplete', invoice, 'iv', user,'paystack')
+        await createPaymnet(amount, reference, 'incomplete', invoice, 'iv', user, 'paystack')
         return data.data
     }
     catch (error) {
@@ -49,7 +52,7 @@ export const verifyPayment = async (reference) => {
     if (response.data.data.status != 'success') {
         //  standardResponse(res, 500, undefined, 'Payment not successful');
         // console.log(response.data)
-         return false;
+        return false;
     }
     return response.data
 }

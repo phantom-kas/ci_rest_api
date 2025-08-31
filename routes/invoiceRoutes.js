@@ -10,6 +10,7 @@ router.get('/init-paystack/:id', authenticateAtoken, payInvoice)
 router.get('/init-stripe/:id', authenticateAtoken, payInvoiceStripe)
 router.get('/invoice/:id', authenticateAtoken, getInvoiceById)
 router.get('/process-paystack/:reference', authenticateAtoken, processPaystackPayment)
+router.get('/service/process-paystack/:reference', processPaystackPayment)
 router.get('/invoices', authenticateAtoken, geAllInvoices)
 router.get('/ghs_rate', authenticateAtoken, async(req, res, next)=> standardResponse(res,200,await getExchangeRate('GHS', 'USD')))
 router.delete('/invoice/:id', authenticateAtoken,adminProtected, deleteInvoice);
