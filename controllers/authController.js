@@ -1,8 +1,8 @@
 import { deleteRefreshToken, storeRefereshTOken, getRtoken, getUserLoginDetails, getUserForToken, storeVerificationCode, getUserToken, setUserToEmailVerified, updateUserPassword, updateLastLogin, getRtokenByerssionID, revokeRtokens, getUSerPassword, updaePassword } from "../models/authModel.js";
 import { compareTokens, generateCode, setRtokenCookie, standardResponse } from "../utils/utils.js"
 import bcrypt from 'bcrypt'
-import dotenv from 'dotenv';
-dotenv.config();
+// import dotenv from 'dotenv';
+// dotenv.config();
 import jwt from 'jsonwebtoken'
 import { sendEmail } from "../services/emailService.js";
 import { resetPasswordEmailHTML, verificationEmail } from "../emails/otp.js";
@@ -23,9 +23,9 @@ export const createRefereshToken = async (userInfo, ancestor = null) => {
 export const generateAtoken = async (req, res, next) => {
     // const { refreshToken } = req.body
 
-    console.log("-----------------rtk----------------------------------")
-    console.log(req.cookies)
-    const refreshToken = req.cookies.refresh_token; 
+    // console.log("-----------------rtk----------------------------------")
+    // console.log(req.cookies)
+    const refreshToken = req.cookies.refresh_token;
 
     if (!refreshToken) {
         return standardResponse(res, 401, undefined, 'Token not found');
@@ -58,11 +58,11 @@ export const generateAtoken = async (req, res, next) => {
 
     const ancestor = oldToken[0]['ancestor'] ?? oldToken[0]['id']
 
-    console.log('---------------------------')
-    console.log('an' + oldToken[0]['ancestor'])
-    console.log('old' + oldToken[0]['id'])
-    console.log('tkn' + ancestor)
-    console.log('---------------------------')
+    // console.log('---------------------------')
+    // console.log('an' + oldToken[0]['ancestor'])
+    // console.log('old' + oldToken[0]['id'])
+    // console.log('tkn' + ancestor)
+    // console.log('---------------------------')
     let userInfo = await getUserForToken(decoded.id)
     await revokeRtokens(ancestor)
     const { refreshtoken, tokenId } = await createRefereshToken(userInfo, ancestor)
@@ -76,18 +76,18 @@ export const generateAtoken = async (req, res, next) => {
 
 export const login = async (req, res, next) => {
     const { password, email } = req.body
-    console.log("--------------------------login----------------------",);
+    // console.log("--------------------------login----------------------",);
 
-    console.log("Connecting to DB:", {
-        host: process.env.DB_HOST,
-        port: process.env.DB_PORT,
-        ssl: true
-    });
+    // console.log("Connecting to DB:", {
+    //     host: process.env.DB_HOST,
+    //     port: process.env.DB_PORT,
+    //     ssl: true
+    // });
 
-    console.log("--------------------------login----------------------",);
+    // console.log("--------------------------login----------------------",);
     const user = await getUserLoginDetails(email)
 
-    console.log(user);
+    // console.log(user);
     if (!user) {
         standardResponse(res, 403, undefined, 'Invalid credentials');
         return
@@ -101,19 +101,23 @@ export const login = async (req, res, next) => {
     let userInfo = await getUserService(user.id)
     userInfo = userInfo[0]
     //  console.log(userInfo)
-    console.log('userid' + user.id)
+    // console.log('userid' + user.id)
     if (!userInfo) {
         standardResponse(res, 403, undefined, 'Invalid credentials');
         return
     }
-    console.log(userInfo)
+    // console.log(userInfo)
     const payload = { email: userInfo.email, fristName: userInfo.fristName, lastName: userInfo.lastName, role: userInfo.role, id: userInfo.id }
     const { refreshtoken, tokenId } = await createRefereshToken(payload)
     const accessToken = createAccessToken(payload, tokenId)
-    userInfo.refreshToken = refreshtoken
+    userInfo
     userInfo.accessToken = accessToken
     setRtokenCookie(res, refreshtoken)
-    standardResponse(res, 200, userInfo, 'Login success', { accessToken, refreshtoken })
+    let rt
+    if (process.env.NODE_ENV === "test") {
+        rt = refreshtoken
+    }
+    standardResponse(res, 200, userInfo, 'Login success', { accessToken, refreshtoken: rt })
     return
 
 }
@@ -126,15 +130,21 @@ export const checkToken = async (req, res, next) => {
 
 export const verifyEmail = async (req, res, next, user = null, end = true) => {
     let email, id;
+    if (process.env.NODE_ENV === "test" && end) {
+        return standardResponse(res, 200, { id }, 'Verification code sent');
+    }
+    if (process.env.NODE_ENV === "test") {
+        return
+    }
     if (user) {
         email = user.email
         id = user.id;
-        console.log('user1')
-        console.log(user)
+        // console.log('user1')
+        // console.log(user)
     } else {
         email = req.user.email
         id = req.user.id
-        console.log('user2')
+        // console.log('user2')
     }
     if (!email) {
         standardResponse(res, 400, undefined, 'Email not provided');
@@ -186,8 +196,8 @@ export const generateResetPasswordToken = async (req, res, next) => {
     const email = req.query.email
     const id = await getUserIDByEmail(email);
 
-    console.log(']]]]]]]]]]]]]]]]]]]]]]]]')
-    console.log(id)
+    // console.log(']]]]]]]]]]]]]]]]]]]]]]]]')
+    // console.log(id)
     const code = generateCode();
     if (!await storeVerificationCode(id, code)) {
         standardResponse(res, 500, undefined, 'Error');
@@ -212,8 +222,8 @@ export const validateAndResetPassword = async (req, res, next) => {
     const decodedToken = Buffer.from(token, 'base64').toString('utf-8');
     const decoded = jwt.verify(decodedToken, process.env.ATOKEN_SECRET);
     let { id, code } = decoded;
-    console.log(']]]]]]]]]]]]]]]]]]]]]]]]')
-    console.log(decoded)
+    // console.log(']]]]]]]]]]]]]]]]]]]]]]]]')
+    // console.log(decoded)
     const storedtoken = await getUserToken(id)
     if (!storedtoken) {
         standardResponse(res, 401, undefined, 'Invalid Verification Token');
@@ -237,7 +247,7 @@ export const validateAndResetPassword = async (req, res, next) => {
 
 
 export const logOut = async (req, res, next) => {
-    const  refreshToken  = req.cookies.refresh_token
+    const refreshToken = req.cookies.refresh_token
     if (!refreshToken) {
         return standardResponse(res, 401, undefined, 'Access denied');
     }

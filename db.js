@@ -1,8 +1,10 @@
 import mysql from "mysql2/promise";
 import dotenv from "dotenv";
-import fs from "fs";   // <-- missing import
+// import fs from "fs";   // <-- missing import
+const envFile = process.env.NODE_ENV === "test" ? ".env.test" : ".env";
+console.log(' envpath = ',envFile)
+dotenv.config({ path: envFile });
 
-dotenv.config();
 const isProd = process.env.NODE_ENV === "production";
 
 let db;

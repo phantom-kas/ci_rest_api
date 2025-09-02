@@ -1,4 +1,4 @@
-import dotenv from 'dotenv';
+// import dotenv from 'dotenv';
 import cloudinary from '../config/cloudinary.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -10,7 +10,7 @@ import crypto from 'crypto';
 import axios from 'axios';
 
 
-dotenv.config();
+// dotenv.config();
 export const standardResponse = (res, status, data = undefined, message = undefined, messages = undefined, obj = undefined) => {
   // const statusString = '';
   res.status(status).json({
@@ -75,7 +75,7 @@ export const generateCode = () => {
 
 
 
-export const deleteFile = async (fileName, res,req=null) => {
+export const deleteFile = async (fileName, res, req = null) => {
   if (!fileName) {
     return null
   }
@@ -83,7 +83,7 @@ export const deleteFile = async (fileName, res,req=null) => {
     return null
   }
   if (process.env.NODE_ENV !== 'production') {
-  // if(false){
+    // if(false){
     const __dirname = path.dirname(fileURLToPath(import.meta.url))
     // if(!/^[\w\-.]+$/.test(fileName)){
     //     return standardResponse(res, 500, undefined, 'Failed', undefined);
@@ -107,7 +107,7 @@ export const deleteFile = async (fileName, res,req=null) => {
     } catch (err) {
       console.error('Cloudinary delete error:', err);
       // return Error(`Cloudinary deletion failed: ${err.message || err}`);
-        return standardResponse(res, 500, undefined, 'Failed to delete image', undefined);
+      return standardResponse(res, 500, undefined, 'Failed to delete image', undefined);
     }
   }
 }
@@ -145,7 +145,7 @@ export const handleUpload = async (req, options = {}) => {
   }
 
   if (process.env.NODE_ENV === 'production') {
-  // if(true){    // Upload to Cloudinary
+    // if(true){    // Upload to Cloudinary
     const base64 = file.buffer.toString('base64');
     const fileStr = `data:${file.mimetype};base64,${base64}`;
 
@@ -193,7 +193,7 @@ export const editImageUtil = async (req, res, next, tabel) => {
   try {
     const id = req.params.id
     const item = await getItemService(tabel, ' image ', '  id = ? limit 1 ', [id])
-    await deleteFile(item[0]['image'], res,req);
+    await deleteFile(item[0]['image'], res, req);
     const fileUrl = await handleUpload(req);
     await editImageInDbService(fileUrl, id, tabel)
     return standardResponse(res, 200, { url: fileUrl }, ' Update Successfull')
@@ -208,12 +208,24 @@ export const editImageUtil = async (req, res, next, tabel) => {
 export const hashToken = (tkn) => bcrypt.hash(tkn, 12)
 export const compareTokens = (tkn1, tkn2) => bcrypt.compare(tkn1, tkn2)
 
-const key = Buffer.from(process.env.ENCRYPTION_KEY, 'hex');
+let key;
 const algorithm = 'aes-256-cbc';
+
+
+export function getEncryptionKey() {
+  if (!key) {
+    const hex = process.env.ENCRYPTION_KEY;
+    if (!hex) {
+      throw new Error("Missing ENCRYPTION_KEY in env file");
+    }
+    key = Buffer.from(hex, "hex");
+  }
+  return key;
+}
 
 export const decrypt = (encrypted, ivHex) => {
   const iv = Buffer.from(ivHex, 'hex');
-  const decipher = crypto.createDecipheriv(algorithm, key, iv);
+  const decipher = crypto.createDecipheriv(algorithm, getEncryptionKey(), iv);
   let decrypted = decipher.update(encrypted, 'hex', 'utf8');
   decrypted += decipher.final('utf8');
   return decrypted;
@@ -239,7 +251,7 @@ function extractPublicId(cloudinaryUrl) {
 
 export const encrypt = (text) => {
   const iv = crypto.randomBytes(16); // unique per encryption
-  const cipher = crypto.createCipheriv(algorithm, key, iv);
+  const cipher = crypto.createCipheriv(algorithm, getEncryptionKey(), iv);
   let encrypted = cipher.update(text, 'utf8', 'hex');
   encrypted += cipher.final('hex');
   return {
@@ -279,26 +291,26 @@ export const getExchangeRate = async (to, from = 'USD') => {
 
 
 
-export const setRtokenCookie = (res,refreshtoken) => {
+export const setRtokenCookie = (res, refreshtoken) => {
   res.clearCookie("refresh_token", { path: "/api/generate_new_access_token" });
   res.clearCookie("refresh_token", { path: "/api/logout" });
   res.cookie("refresh_token", refreshtoken, {
     httpOnly: true,
-    secure: true, //process.env.NODE_ENV === "production",
+    secure: process.env.NODE_ENV === "production",
     sameSite: "none",
     // path: "/api/generate_new_access_token",  // 👈 only send to this path!
-    path:'/api/generate_new_access_token',
+    path: '/api/generate_new_access_token',
     sameSite: "none",
     maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
   });
 
-    res.cookie("refresh_token", refreshtoken, {
+  res.cookie("refresh_token", refreshtoken, {
     httpOnly: true,
-    secure: true, //process.env.NODE_ENV === "production",
+    secure: process.env.NODE_ENV === "production",
     sameSite: "none",
     // path: "/api/generate_new_access_token",  // 👈 only send to this path!
-    path:'/api/logout',
+    path: '/api/logout',
     maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
   });
-  
+
 }

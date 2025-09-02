@@ -3,8 +3,11 @@ import { getDateTime, setRtokenCookie } from "../utils/utils.js";
 import { createAccessToken, createRefereshToken } from "../controllers/authController.js";
 import express from "express";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
+import dotenv from 'dotenv';
+const envFile = process.env.NODE_ENV === "test" ? ".env.test" : ".env";
+console.log(' envpath = ',envFile)
+dotenv.config({ path: envFile });
 
-// import GoogleStrategy from "passport-google-oidc";
 import db from "../db.js";
 import { increaseLearners } from "../models/userModel.js";
 const router = express.Router();
@@ -34,7 +37,7 @@ passport.use(
                     // Create new user
                     const [result] = await db.query(
                         "INSERT INTO users (firstName, lastName, email, password, isVerified, createdAt,image,role) VALUES (?,?,?,?,?, ?,?,?)",
-                        [fristName, lastName, email, null, 1, getDateTime(), image,'learner']
+                        [fristName, lastName, email, null, 1, getDateTime(), image, 'learner']
                     );
                     userId = result.insertId;
                     await increaseLearners();
@@ -62,10 +65,10 @@ router.get(
 );
 router.get(
     "/google/callback",
-    passport.authenticate("google", { failureRedirect: "/login" , session: false, }),
+    passport.authenticate("google", { failureRedirect: "/login", session: false, }),
     (req, res) => {
-        const { accessToken, refreshtoken,userId } = req.user;
-        
+        const { accessToken, refreshtoken, userId } = req.user;
+
         // Store refresh token in HttpOnly cookie
         setRtokenCookie(res, refreshtoken)
         // Send user back to frontend with access token

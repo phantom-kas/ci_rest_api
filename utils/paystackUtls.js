@@ -1,8 +1,8 @@
-import dotenv from 'dotenv';
+// import dotenv from 'dotenv';
 import { encrypt, getExchangeRate, standardResponse } from './utils.js';
 import { createPaymnet } from '../models/paymentModel.js';
 import axios from 'axios';
-dotenv.config();
+// dotenv.config();
 
 export const initPackage = async (next, email, amount, metadata, invoice, user, currency = 'GHS') => {
     try {

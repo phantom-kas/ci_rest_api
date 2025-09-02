@@ -59,9 +59,10 @@ export const registerAdmin = async (req, res, next) => {
         }
         const user = await createAdmin(firstName, lastName, email, password);
         if (user) {
+            
             return verifyEmail(req, res, next, { id: user, email })
         }
-        // standardResponse(res, 200, { id: user }, 'User created successfully.')
+     standardResponse(res, 500, { id: user }, 'User Error.')
     }
     catch (err) {
         next(err)

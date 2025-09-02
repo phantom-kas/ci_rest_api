@@ -1,12 +1,26 @@
 import Stripe from 'stripe';
 import { createPaymnet } from '../models/paymentModel.js';
-const stripe = Stripe(process.env.STRIPE_SK);
+
+let stripeClient; 
+
+export function getStripeClient() {
+  if (!stripeClient) {
+    const sk = process.env.STRIPE_SK;
+    if (!sk) {
+      throw new Error("Missing STRIPE_SK in environment variables");
+    }
+    stripeClient = new Stripe(sk);
+  }
+  return stripeClient;
+}
+
 export const getprocessingFee = (amount) => {
     const fee = Math.ceil((parseFloat(amount) * 0.029) + 0.3);
     return fee;
 }
 
 export const generateStripeSesstion = async (next, name, price, user, invoice) => {
+    const stripe = getStripeClient()
     let processingFee = getprocessingFee(price);
     console.log('Total fee = ' ,price)
     console.log('Procefing fee = ' ,processingFee)
@@ -43,7 +57,7 @@ export const generateStripeSesstion = async (next, name, price, user, invoice) =
 
 
 export const verifyStripePayment = async (res, sessionId,next) => {
-
+    let stripe = getStripeClient()
     try {
         const session = await stripe.checkout.sessions.retrieve(sessionId);
         console.log('---------------SESSION-----------------')
